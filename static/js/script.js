@@ -1,11 +1,9 @@
 /* ============================================
-   SAMI'S SCENT — Main JavaScript
-   Theme Management, Animations, Interactions
+   SAMI'S SCENT — Professional Interactions
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    initParticles();
     initScrollReveal();
     initNavbar();
     initMobileMenu();
@@ -13,13 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initSmoothScroll();
 });
 
-/* ---------- Theme Management ---------- */
+/* --- Theme Management --- */
 function initTheme() {
     const html = document.documentElement;
     const themeToggle = document.getElementById('themeToggle');
     const storedTheme = localStorage.getItem('samis-scent-theme');
 
-    // Apply saved theme or use system preference
     if (storedTheme) {
         html.setAttribute('data-theme', storedTheme);
     } else {
@@ -27,14 +24,12 @@ function initTheme() {
         html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
     }
 
-    // Listen for system theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
         if (!localStorage.getItem('samis-scent-theme')) {
             html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
         }
     });
 
-    // Toggle button
     themeToggle.addEventListener('click', () => {
         const current = html.getAttribute('data-theme');
         const next = current === 'dark' ? 'light' : 'dark';
@@ -43,74 +38,51 @@ function initTheme() {
     });
 }
 
-/* ---------- Particle Background ---------- */
-function initParticles() {
-    const container = document.getElementById('particles');
-    const particleCount = window.innerWidth < 768 ? 20 : 50;
-
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-
-        const size = Math.random() * 4 + 2;
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.left = `${Math.random() * 100}%`;
-        particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
-        particle.style.animationDelay = `${Math.random() * 10}s`;
-        particle.style.opacity = Math.random() * 0.5 + 0.2;
-
-        container.appendChild(particle);
-    }
-}
-
-/* ---------- Scroll Reveal Animation ---------- */
+/* --- Scroll Reveal (Subtle, respects reduced motion) --- */
 function initScrollReveal() {
-    const reveals = document.querySelectorAll('.reveal');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+        return;
+    }
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('active');
+                observer.unobserve(entry.target); // Only animate once
             }
         });
     }, {
         threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        rootMargin: '0px 0px -40px 0px'
     });
 
-    reveals.forEach(el => observer.observe(el));
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
-/* ---------- Navbar Scroll Effect ---------- */
+/* --- Navbar Scroll Effect --- */
 function initNavbar() {
-    const navbar = document.querySelector('.navbar');
-    let lastScroll = 0;
-
+    const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-
-        if (currentScroll > 100) {
-            navbar.style.boxShadow = 'var(--shadow-md)';
+        if (window.pageYOffset > 20) {
+            navbar.classList.add('scrolled');
         } else {
-            navbar.style.boxShadow = 'none';
+            navbar.classList.remove('scrolled');
         }
-
-        lastScroll = currentScroll;
-    });
+    }, { passive: true });
 }
 
-/* ---------- Mobile Menu ---------- */
+/* --- Mobile Menu --- */
 function initMobileMenu() {
     const btn = document.getElementById('mobileMenuBtn');
-    const navLinks = document.querySelector('.nav-links');
+    const navLinks = document.getElementById('navLinks');
 
     btn.addEventListener('click', () => {
         btn.classList.toggle('active');
         navLinks.classList.toggle('active');
     });
 
-    // Close menu when clicking a link
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', () => {
             btn.classList.remove('active');
@@ -119,7 +91,7 @@ function initMobileMenu() {
     });
 }
 
-/* ---------- Newsletter Form ---------- */
+/* --- Newsletter Form (Preserves existing Resend logic) --- */
 function initNewsletterForm() {
     const form = document.getElementById('newsletterForm');
     const emailInput = document.getElementById('emailInput');
@@ -129,11 +101,9 @@ function initNewsletterForm() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const email = emailInput.value.trim();
         if (!email) return;
 
-        // Show loading
         btnText.hidden = true;
         btnLoader.hidden = false;
         message.textContent = '';
@@ -149,14 +119,14 @@ function initNewsletterForm() {
             const data = await response.json();
 
             if (response.ok) {
-                message.textContent = data.message || '🎉 Welcome to Sami\'s Scent family! Check your email.';
+                message.textContent = 'Welcome to the inner circle. Please check your email.';
                 message.classList.add('success');
                 emailInput.value = '';
             } else {
-                throw new Error(data.detail || 'Something went wrong');
+                throw new Error(data.detail || 'Subscription failed. Please try again.');
             }
         } catch (error) {
-            message.textContent = error.message || '❌ Failed to subscribe. Please try again.';
+            message.textContent = error.message;
             message.classList.add('error');
         } finally {
             btnText.hidden = false;
@@ -165,7 +135,7 @@ function initNewsletterForm() {
     });
 }
 
-/* ---------- Smooth Scroll ---------- */
+/* --- Smooth Scroll --- */
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -180,30 +150,5 @@ function initSmoothScroll() {
                 });
             }
         });
-    });
-}
-
-/* ---------- CEO Image Tilt Effect ---------- */
-const ceoFrame = document.querySelector('.ceo-frame');
-if (ceoFrame) {
-    ceoFrame.addEventListener('mousemove', (e) => {
-        const rect = ceoFrame.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = (y - centerY) / 15;
-        const rotateY = (centerX - x) / 15;
-
-        ceoFrame.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    });
-
-    ceoFrame.addEventListener('mouseleave', () => {
-        ceoFrame.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
-        ceoFrame.style.transition = 'transform 0.5s ease';
-    });
-
-    ceoFrame.addEventListener('mouseenter', () => {
-        ceoFrame.style.transition = 'none';
     });
 }
