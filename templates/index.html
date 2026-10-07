@@ -6,255 +6,186 @@
     <meta name="description" content="Sami's Scent — Luxury Perfumes, Timeless Elegance" />
     <title>Sami's Scent | Luxury Fragrances</title>
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Playfair Display (Elegant Headings) & Inter (Clean Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
 
-    <!-- Font Awesome for icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="/static/css/styles.css" />
 </head>
 <body>
 
-    <!-- Animated Background Particles -->
-    <div class="particles" id="particles"></div>
-
     <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="#" class="logo">
-                <span class="logo-icon">✦</span>
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="#home" class="logo">
                 <span class="logo-text">Sami's <em>Scent</em></span>
             </a>
-            <div class="nav-links">
+            
+            <div class="nav-links" id="navLinks">
                 <a href="#home" class="nav-link active">Home</a>
-                <a href="#about" class="nav-link">About</a>
-                <a href="#contact" class="nav-link">Contact</a>
-                <a href="#shop" class="nav-link shop-btn">Shop Now</a>
+                <a href="#connect" class="nav-link">Connect</a>
+                <a href="#newsletter" class="nav-link">Newsletter</a>
+                <a href="#about" class="nav-link">About</a> <!-- Moved to last -->
+                <a href="#connect" class="nav-link nav-cta">Shop Now</a>
             </div>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                <i class="fas fa-moon"></i>
-                <i class="fas fa-sun"></i>
-            </button>
-            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
         </div>
     </nav>
 
-    <!-- Hero Section with CEO -->
+    <!-- Hero Section -->
     <section class="hero" id="home">
-        <div class="hero-content">
-            <div class="ceo-wrapper">
-                <!-- Decorative rings -->
-                <div class="ring ring-1"></div>
-                <div class="ring ring-2"></div>
-                <div class="ring ring-3"></div>
-
-                <!-- Floating orbs -->
-                <div class="orb orb-1"></div>
-                <div class="orb orb-2"></div>
-                <div class="orb orb-3"></div>
-
-                <!-- CEO Image -->
-                <div class="ceo-frame">
-                    <div class="ceo-glow"></div>
-                    <img src="/static/images/ceo.jpg" alt="Sami — CEO of Sami's Scent" class="ceo-img" id="ceoImg" />
-                    <div class="ceo-overlay"></div>
+        <div class="container hero-container">
+            <!-- CEO Visual Block -->
+            <div class="hero-visual reveal">
+                <div class="ceo-portrait">
+                    <!-- Replace with actual CEO image -->
+                    <img src="/static/images/ceo.jpg" alt="Sami, Founder & CEO of Sami's Scent" />
                 </div>
-
-                <!-- Sparkles -->
-                <div class="sparkle sparkle-1">✦</div>
-                <div class="sparkle sparkle-2">✧</div>
-                <div class="sparkle sparkle-3">✦</div>
-                <div class="sparkle sparkle-4">✧</div>
-                <div class="sparkle sparkle-5">✦</div>
-            </div>
-
-            <div class="hero-text">
-                <p class="hero-subtitle reveal">The Visionary</p>
-                <h1 class="hero-title reveal">
-                    Welcome to <span class="gradient-text">Sami's Scent</span>
-                </h1>
-                <p class="hero-description reveal">
-                    Where every fragrance tells a story, and every bottle holds a memory.
-                    Crafted with passion, worn with pride.
-                </p>
-                <div class="hero-cta reveal">
-                    <a href="#shop" class="btn btn-primary">
-                        <i class="fas fa-shopping-bag"></i> Explore Collection
-                    </a>
-                    <a href="#about" class="btn btn-outline">
-                        Our Story <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Scroll indicator -->
-        <div class="scroll-indicator">
-            <div class="mouse">
-                <div class="wheel"></div>
-            </div>
-            <p>Scroll to explore</p>
-        </div>
-    </section>
-
-    <!-- Bio / About Section -->
-    <section class="bio-section" id="about">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Our Story</span>
-                <h2 class="section-title">A Legacy of <span class="gradient-text">Elegance</span></h2>
-            </div>
-
-            <div class="bio-grid">
-                <div class="bio-card reveal">
-                    <div class="bio-icon">
-                        <i class="fas fa-flask"></i>
-                    </div>
-                    <h3>Crafted with Passion</h3>
-                    <p>
-                        Each fragrance at Sami's Scent is meticulously blended using the finest
-                        ingredients sourced from around the world. From the rose fields of Grasse
-                        to the oud forests of Arabia, we bring you scents that transcend time.
-                    </p>
-                </div>
-
-                <div class="bio-card reveal">
-                    <div class="bio-icon">
-                        <i class="fas fa-gem"></i>
-                    </div>
-                    <h3>Luxury Redefined</h3>
-                    <p>
-                        We believe luxury isn't just about price — it's about experience.
-                        From the moment you unbox your perfume to the last lingering note,
-                        every detail is designed to delight your senses.
-                    </p>
-                </div>
-
-                <div class="bio-card reveal">
-                    <div class="bio-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <h3>Made for You</h3>
-                    <p>
-                        Whether you seek a bold signature scent or a subtle everyday aura,
-                        Sami's Scent has a fragrance that speaks your language. Discover
-                        your essence, embrace your story.
-                    </p>
-                </div>
-            </div>
-
-            <div class="ceo-bio reveal">
-                <div class="ceo-bio-quote">
-                    <i class="fas fa-quote-left"></i>
-                </div>
-                <blockquote>
-                    "A fragrance is the most intense form of memory. At Sami's Scent,
-                    we don't just sell perfumes — we craft moments that linger long after
-                    you've left the room."
-                </blockquote>
-                <cite>— Sami, Founder & CEO</cite>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact & Social Section -->
-    <section class="contact-section" id="contact">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Connect With Us</span>
-                <h2 class="section-title">Stay <span class="gradient-text">Connected</span></h2>
-                <p class="section-subtitle">
-                    Follow us on social media, shop directly, or join our exclusive Telegram channel
-                    for juicy deals and discounts.
-                </p>
-            </div>
-
-            <div class="social-grid">
-                <!-- WhatsApp -->
-                <a href="https://wa.me/2348000000000" target="_blank" class="social-card reveal" data-color="#25D366">
-                    <div class="social-icon whatsapp">
-                        <i class="fab fa-whatsapp"></i>
-                    </div>
-                    <h3>WhatsApp</h3>
-                    <p>Chat with us directly for orders & inquiries</p>
-                    <span class="social-arrow"><i class="fas fa-arrow-right"></i></span>
-                </a>
-
-                <!-- Shop on Website -->
-                <a href="#shop" class="social-card reveal" data-color="#C9A96E">
-                    <div class="social-icon shop">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <h3>Shop on Website</h3>
-                    <p>Browse our full collection & order online</p>
-                    <span class="social-arrow"><i class="fas fa-arrow-right"></i></span>
-                </a>
-
-                <!-- TikTok -->
-                <a href="https://tiktok.com/@samisscent" target="_blank" class="social-card reveal" data-color="#ff0050">
-                    <div class="social-icon tiktok">
-                        <i class="fab fa-tiktok"></i>
-                    </div>
-                    <h3>TikTok</h3>
-                    <p>Watch our latest scent reviews & trends</p>
-                    <span class="social-arrow"><i class="fas fa-arrow-right"></i></span>
-                </a>
-
-                <!-- Instagram Business -->
-                <a href="https://instagram.com/samisscent" target="_blank" class="social-card reveal" data-color="#E1306C">
-                    <div class="social-icon instagram">
+                <!-- Social Links: Immediately after picture, clean and subtle -->
+                <div class="ceo-socials">
+                    <a href="https://instagram.com/samisscent" target="_blank" rel="noopener" aria-label="Instagram">
                         <i class="fab fa-instagram"></i>
-                    </div>
-                    <h3>Instagram</h3>
-                    <p>Behind the scenes & daily fragrance inspiration</p>
-                    <span class="social-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                    <a href="https://tiktok.com/@samisscent" target="_blank" rel="noopener" aria-label="TikTok">
+                        <i class="fab fa-tiktok"></i>
+                    </a>
+                    <a href="https://linkedin.com/in/samisscent" target="_blank" rel="noopener" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CEO / Brand Content -->
+            <div class="hero-content reveal">
+                <span class="eyebrow">Founder & Visionary</span>
+                <h1 class="hero-title">Sami's <em>Scent</em></h1>
+                <p class="hero-lead">
+                    Crafting timeless fragrances that define elegance and leave a lasting impression. 
+                    Every bottle is a curated experience, designed for those who appreciate the art of scent.
+                </p>
+                <div class="hero-actions">
+                    <a href="#connect" class="btn btn-primary">Explore Collection</a>
+                    <a href="#about" class="btn btn-secondary">Our Philosophy</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Connect / Social Section -->
+    <section class="section connect-section" id="connect">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="eyebrow">Get in Touch</span>
+                <h2 class="section-title">Connect With Us</h2>
+                <p class="section-subtitle">
+                    Follow our journey, shop directly, or join our exclusive community for early access to new releases.
+                </p>
+            </div>
+
+            <div class="grid-3">
+                <a href="https://wa.me/2348000000000" target="_blank" class="card connect-card reveal">
+                    <div class="card-icon"><i class="fab fa-whatsapp"></i></div>
+                    <h3>WhatsApp</h3>
+                    <p>Chat directly with our team for personalized recommendations and orders.</p>
+                    <span class="card-link">Message Us <i class="fas fa-arrow-right"></i></span>
                 </a>
 
-                <!-- Telegram -->
-                <a href="https://t.me/samisscent" target="_blank" class="social-card telegram-card reveal" data-color="#0088cc">
-                    <div class="social-icon telegram">
-                        <i class="fab fa-telegram-plane"></i>
-                    </div>
+                <a href="#shop" class="card connect-card reveal">
+                    <div class="card-icon"><i class="fas fa-store"></i></div>
+                    <h3>Online Store</h3>
+                    <p>Browse our full catalog of signature and limited-edition fragrances.</p>
+                    <span class="card-link">Shop Now <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="https://t.me/samisscent" target="_blank" class="card connect-card reveal">
+                    <div class="card-icon"><i class="fab fa-telegram-plane"></i></div>
                     <h3>Telegram Channel</h3>
-                    <p>Subscribe for juicy details, flash sales & exclusive discounts!</p>
-                    <span class="subscribe-badge">🔥 Hot Deals</span>
-                    <span class="social-arrow"><i class="fas fa-arrow-right"></i></span>
+                    <p>Subscribe for exclusive discounts, behind-the-scenes content, and early access.</p>
+                    <span class="card-link">Join Channel <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="https://instagram.com/samisscent" target="_blank" class="card connect-card reveal">
+                    <div class="card-icon"><i class="fab fa-instagram"></i></div>
+                    <h3>Instagram</h3>
+                    <p>Daily fragrance inspiration, styling tips, and community highlights.</p>
+                    <span class="card-link">Follow Us <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="https://tiktok.com/@samisscent" target="_blank" class="card connect-card reveal">
+                    <div class="card-icon"><i class="fab fa-tiktok"></i></div>
+                    <h3>TikTok</h3>
+                    <p>Watch authentic reviews, scent layering guides, and brand stories.</p>
+                    <span class="card-link">Watch Now <i class="fas fa-arrow-right"></i></span>
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- Newsletter / Email Subscription via Resend -->
-    <section class="newsletter-section" id="shop">
+    <!-- Newsletter Section -->
+    <section class="section newsletter-section" id="newsletter">
         <div class="container">
-            <div class="newsletter-box reveal">
+            <div class="newsletter-card reveal">
                 <div class="newsletter-content">
-                    <h2>Get <span class="gradient-text">Exclusive</span> Offers</h2>
-                    <p>Subscribe to our newsletter and receive 10% off your first order plus early access to new arrivals.</p>
+                    <span class="eyebrow">Exclusive Access</span>
+                    <h2 class="section-title">Join the Inner Circle</h2>
+                    <p class="section-subtitle" style="text-align: left; margin: 0 0 1.5rem 0;">
+                        Subscribe to receive 10% off your first order, plus early access to new arrivals and private sales.
+                    </p>
                     <form class="newsletter-form" id="newsletterForm">
                         <div class="input-group">
-                            <input type="email" id="emailInput" placeholder="Enter your email address" required />
+                            <input type="email" id="emailInput" placeholder="Enter your email address" required aria-label="Email address" />
                             <button type="submit" class="btn btn-primary">
                                 <span class="btn-text">Subscribe</span>
-                                <span class="btn-loader" hidden>
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                </span>
+                                <span class="btn-loader" hidden><i class="fas fa-spinner fa-spin"></i></span>
                             </button>
                         </div>
-                        <p class="form-message" id="formMessage"></p>
+                        <p class="form-message" id="formMessage" role="status"></p>
                     </form>
                 </div>
-                <div class="newsletter-decoration">
-                    <div class="deco-bottle">
-                        <i class="fas fa-wine-bottle"></i>
-                    </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section (Moved to Last) -->
+    <section class="section about-section" id="about">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="eyebrow">Our Philosophy</span>
+                <h2 class="section-title">The Art of Fragrance</h2>
+            </div>
+
+            <div class="about-grid">
+                <div class="about-card reveal">
+                    <h3>Meticulous Craftsmanship</h3>
+                    <p>Each fragrance is meticulously blended using the finest ingredients sourced globally. From the rose fields of Grasse to the oud forests of Arabia, we bring you scents that transcend time.</p>
                 </div>
+                <div class="about-card reveal">
+                    <h3>Redefined Luxury</h3>
+                    <p>Luxury is an experience, not just a price point. From the moment you unbox your perfume to the last lingering note on your skin, every detail is designed to delight the senses.</p>
+                </div>
+                <div class="about-card reveal">
+                    <h3>Your Signature Scent</h3>
+                    <p>Whether you seek a bold statement or a subtle everyday aura, Sami's Scent has a fragrance that speaks your language. Discover your essence and embrace your story.</p>
+                </div>
+            </div>
+
+            <div class="ceo-quote reveal">
+                <blockquote>
+                    "A fragrance is the most intense form of memory. At Sami's Scent, we don't just sell perfumes — we craft moments that linger long after you've left the room."
+                </blockquote>
+                <cite>— Sami, Founder & CEO</cite>
             </div>
         </div>
     </section>
@@ -264,31 +195,28 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <a href="#" class="logo">
-                        <span class="logo-icon">✦</span>
-                        <span class="logo-text">Sami's <em>Scent</em></span>
-                    </a>
+                    <span class="logo-text">Sami's <em>Scent</em></span>
                     <p>Luxury fragrances crafted for the modern soul. Experience scents that define you.</p>
                 </div>
                 <div class="footer-links">
-                    <h4>Quick Links</h4>
+                    <h4>Navigation</h4>
                     <a href="#home">Home</a>
+                    <a href="#connect">Connect</a>
+                    <a href="#newsletter">Newsletter</a>
                     <a href="#about">About</a>
-                    <a href="#shop">Shop</a>
-                    <a href="#contact">Contact</a>
                 </div>
                 <div class="footer-social">
                     <h4>Follow Us</h4>
                     <div class="footer-social-icons">
                         <a href="https://wa.me/2348000000000" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                        <a href="https://tiktok.com/@samisscent" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
                         <a href="https://instagram.com/samisscent" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://tiktok.com/@samisscent" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
                         <a href="https://t.me/samisscent" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 Sami's Scent. All rights reserved. Crafted with <i class="fas fa-heart"></i> and fine fragrances.</p>
+                <p>&copy; 2026 Sami's Scent. All rights reserved.</p>
             </div>
         </div>
     </footer>
