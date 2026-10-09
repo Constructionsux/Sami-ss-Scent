@@ -5,3 +5,5 @@ python-dotenv==1.0.1
 pydantic[email]==2.9.2
 resend==2.4.0
 python-multipart==0.0.9
+sqlalchemy[asyncio]==2.0.35
+asyncpg==0.29.0
