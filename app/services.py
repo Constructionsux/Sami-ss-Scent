@@ -6,9 +6,10 @@ from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from fastapi import HTTPException
+from fastapi import Header, HTTPException
 from app.models import User, Product, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, DeliveryZone
 from app.schemas import UserCreate, UserLogin, OrderCreate
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
@@ -170,6 +171,15 @@ async def create_order(db: AsyncSession, user: User, request: OrderCreate, guest
     
     return order
 
+
+
+async def verify_admin_token(x_admin_token: str = Header(None)):
+    """Verify admin API secret token"""
+    secret = os.getenv("ADMIN_API_SECRET", "super-secret-admin-key")
+    if x_admin_token != secret:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return True
+    
 # Wishlist functions
 async def get_or_create_wishlist(db: AsyncSession, user_id: uuid.UUID):
     result = await db.execute(select(Wishlist).where(Wishlist.user_id == user_id))
