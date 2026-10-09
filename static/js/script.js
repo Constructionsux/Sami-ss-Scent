@@ -91,7 +91,7 @@ function initMobileMenu() {
     });
 }
 
-/* --- Newsletter Form (Preserves existing Resend logic) --- */
+/* --- Newsletter Form (Updated for new API) --- */
 function initNewsletterForm() {
     const form = document.getElementById('newsletterForm');
     const emailInput = document.getElementById('emailInput');
@@ -119,14 +119,16 @@ function initNewsletterForm() {
             const data = await response.json();
 
             if (response.ok) {
-                message.textContent = 'Welcome to the inner circle. Please check your email.';
+                message.textContent = 'Welcome to the inner circle. Please check your inbox.';
                 message.classList.add('success');
                 emailInput.value = '';
             } else {
-                throw new Error(data.detail || 'Subscription failed. Please try again.');
+                // Handle specific Pydantic validation errors gracefully
+                const errorMsg = data.detail?.[0]?.msg || data.detail || 'Invalid email address.';
+                throw new Error(errorMsg);
             }
         } catch (error) {
-            message.textContent = error.message;
+            message.textContent = error.message || 'Something went wrong. Please try again.';
             message.classList.add('error');
         } finally {
             btnText.hidden = false;
