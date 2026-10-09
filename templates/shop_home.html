@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | Sami's Scent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/shop.css">
+</head>
+<body>
+    <!-- Marquee -->
+    <div class="marquee-container">
+        <div class="marquee-text">
+            Smell Nice. Feel Confident. • Shop Authentic Fragrances • Delivery Across Nigeria • Find Your Signature Scent • Luxury at Affordable Prices • Make Every Moment Memorable •
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="shop-nav">
+        <div class="shop-nav-container">
+            <div class="shop-nav-left">
+                <span class="currency-display">₦ NGN</span>
+                <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+                <div class="shop-nav-links">
+                    <a href="/shop-home">Home</a>
+                    <a href="/shop">Shop</a>
+                    <a href="/wishlist">Wishlist</a>
+                    <a href="/login">Login</a>
+                </div>
+            </div>
+            
+            <a href="/shop-home" class="logo">
+                <span class="logo-text">Sami's <em>Scent</em></span>
+            </a>
+            
+            <div class="shop-nav-right">
+                <div class="search-box">
+                    <input type="text" placeholder="Search perfumes...">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button class="icon-btn"><i class="fas fa-user"></i></button>
+                <a href="/cart" class="icon-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Carousel -->
+    <div class="container">
+        <div class="carousel-container">
+            <div class="carousel-slides" id="carouselSlides">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Categories -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Shop by Category</h2>
+            <div class="categories-grid" id="categoriesGrid">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- New Arrivals -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">New Arrivals</h2>
+            <div class="product-grid" id="newArrivalsGrid">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- Bestsellers -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Bestsellers</h2>
+            <div class="product-grid" id="bestsellersGrid">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="shop-footer">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <span class="logo-text">Sami's <em>Scent</em></span>
+                <p style="margin-top: 1rem; color: var(--color-text-secondary);">
+                    Luxury fragrances crafted for the modern soul.
+                </p>
+                <p style="margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.9rem;">
+                    Lagos, Nigeria<br>
+                    +234 800 000 0000<br>
+                    hello@samisscent.com
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Store Links</h4>
+                <a href="/shop-home">Home</a>
+                <a href="/shop">Shop</a>
+                <a href="/login">Login/Register</a>
+                <a href="/wishlist">Wishlist</a>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Useful Links</h4>
+                <a href="#">About Us</a>
+                <a href="#">FAQs</a>
+                <a href="#">Contact Us</a>
+                <a href="#">Shipping Policy</a>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <a href="https://instagram.com/samisscent" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
+                <a href="https://tiktok.com/@samisscent" target="_blank"><i class="fab fa-tiktok"></i> TikTok</a>
+                <a href="https://wa.me/2348000000000" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 Sami's Scent. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/cart.js"></script>
+    <script>
+        // Load featured products for carousel
+        async function loadCarousel() {
+            try {
+                const products = await apiRequest('/api/products/featured');
+                const slides = document.getElementById('carouselSlides');
+                
+                slides.innerHTML = products.map(p => `
+                    <div class="carousel-slide">
+                        <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
+                        <div class="carousel-content">
+                            <h2>${p.name}</h2>
+                            <p>${p.description || 'Discover this exquisite fragrance'}</p>
+                            <a href="https://wa.me/2348000000000?text=I'm interested in ${encodeURIComponent(p.name)}" class="whatsapp-btn" target="_blank">
+                                <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Auto-slide
+                let currentSlide = 0;
+                setInterval(() => {
+                    currentSlide = (currentSlide + 1) % products.length;
+                    slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+                }, 5000);
+            } catch (error) {
+                console.error('Failed to load carousel:', error);
+            }
+        }
+        
+        // Load categories
+        async function loadCategories() {
+            try {
+                const categories = await apiRequest('/api/products/categories/list');
+                const grid = document.getElementById('categoriesGrid');
+                
+                grid.innerHTML = categories.slice(0, 2).map(c => `
+                    <a href="/shop?category=${c.slug}" class="category-card">
+                        <img src="${c.image_url || '/static/images/category-placeholder.jpg'}" alt="${c.name}">
+                        <div class="category-overlay">
+                            <h3>${c.name}</h3>
+                            <span class="btn btn-primary">Shop Now</span>
+                        </div>
+                    </a>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+        
+        // Load new arrivals
+        async function loadNewArrivals() {
+            try {
+                const products = await apiRequest('/api/products/new-arrivals');
+                const grid = document.getElementById('newArrivalsGrid');
+                
+                grid.innerHTML = products.map(p => `
+                    <div class="product-card">
+                        <a href="/product/${p.id}" class="product-image">
+                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
+                        </a>
+                        <div class="product-info">
+                            <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
+                            <h3 class="product-name">${p.name}</h3>
+                            <div class="product-price">
+                                <span class="current-price">₦${parseFloat(p.price).toLocaleString()}</span>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load new arrivals:', error);
+            }
+        }
+        
+        // Load bestsellers
+        async function loadBestsellers() {
+            try {
+                const products = await apiRequest('/api/products/bestsellers');
+                const grid = document.getElementById('bestsellersGrid');
+                
+                grid.innerHTML = products.map(p => `
+                    <div class="product-card">
+                        <a href="/product/${p.id}" class="product-image">
+                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
+                        </a>
+                        <div class="product-info">
+                            <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
+                            <h3 class="product-name">${p.name}</h3>
+                            <div class="product-price">
+                                <span class="current-price">₦${parseFloat(p.price).toLocaleString()}</span>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load bestsellers:', error);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCarousel();
+            loadCategories();
+            loadNewArrivals();
+            loadBestsellers();
+        });
+    </script>
+</body>
+</html>
