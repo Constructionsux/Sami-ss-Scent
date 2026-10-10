@@ -183,8 +183,9 @@ async def verify_admin_token(x_admin_token: str = Header(None)):
 
 
 class SubscriptionService:
+    
     @staticmethod
-    async def subscribe(data,db: AsyncSession = Depends(get_db),) -> dict:
+    async def subscribe(data, db: AsyncSession) -> dict:
         """Atomic Upsert for newsletter subscription"""
         query = text("""
             WITH upserted_user AS (
@@ -204,14 +205,14 @@ class SubscriptionService:
         """)
         
         # full_name defaults to 'Subscriber' for newsletter only
-        result = await db.execute(query, {"email": data.email, "full_name": "Newsletter Subscriber"})
+        await db.execute(query, {"email": data.email, "full_name": "Newsletter Subscriber"})
         await db.commit()
         
         # TODO: Trigger async email sending here
         return {"status": "success", "message": "Welcome to the inner circle."}
 
     @staticmethod
-    async def get_subscribers(page: int, limit: int, status: str, search: str,db: AsyncSession = Depends(get_db),):
+    async def get_subscribers(page: int, limit: int, status: str, search: str, db: AsyncSession):
         offset = (page - 1) * limit
         
         count_query = text("""
