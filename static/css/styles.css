@@ -742,3 +742,50 @@ img {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
 }
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+.brand-logo:hover {
+    opacity: 0.8;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.logo-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1A1A1A; /* Deep Charcoal */
+    letter-spacing: -0.02em;
+}
+
+[data-theme="dark"] .logo-name {
+    color: #F5F5F5;
+}
+
+.logo-accent {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 400;
+    font-style: italic;
+    color: #8C735A; /* Muted Bronze/Gold */
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+}
+
