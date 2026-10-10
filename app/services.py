@@ -180,6 +180,75 @@ async def verify_admin_token(x_admin_token: str = Header(None)):
     if x_admin_token != secret:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return True
+
+
+class SubscriptionService:
+    @staticmethod
+    async def subscribe(db: AsyncSession, data) -> dict:
+        """Atomic Upsert for newsletter subscription"""
+        query = text("""
+            WITH upserted_user AS (
+                INSERT INTO users (email, full_name)
+                VALUES (:email, :full_name)
+                ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
+                RETURNING id, email
+            )
+            INSERT INTO newsletter_subscriptions (user_id, status, subscribed_at, unsubscribed_at)
+            SELECT id, 'active', NOW(), NULL FROM upserted_user
+            ON CONFLICT (user_id) DO UPDATE 
+            SET status = 'active', 
+                subscribed_at = NOW(), 
+                unsubscribed_at = NULL,
+                updated_at = NOW()
+            RETURNING user_id, status
+        """)
+        
+        # full_name defaults to 'Subscriber' for newsletter only
+        result = await db.execute(query, {"email": data.email, "full_name": "Newsletter Subscriber"})
+        await db.commit()
+        
+        # TODO: Trigger async email sending here
+        return {"status": "success", "message": "Welcome to the inner circle."}
+
+    @staticmethod
+    async def get_subscribers(db: AsyncSession, page: int, limit: int, status: str, search: str):
+        offset = (page - 1) * limit
+        
+        count_query = text("""
+            SELECT COUNT(*) FROM newsletter_subscriptions ns 
+            JOIN users u ON ns.user_id = u.id 
+            WHERE (:status = 'all' OR ns.status = :status)
+            AND (:search = '' OR u.email ILIKE :search_pattern)
+        """)
+        
+        data_query = text("""
+            SELECT ns.id, ns.user_id, u.email, ns.status, ns.subscribed_at, ns.unsubscribed_at 
+            FROM newsletter_subscriptions ns 
+            JOIN users u ON ns.user_id = u.id 
+            WHERE (:status = 'all' OR ns.status = :status)
+            AND (:search = '' OR u.email ILIKE :search_pattern)
+            ORDER BY ns.subscribed_at DESC
+            LIMIT :limit OFFSET :offset
+        """)
+        
+        params = {
+            "status": status, "search": search, 
+            "search_pattern": f"%{search}%", "limit": limit, "offset": offset
+        }
+        
+        total = (await db.execute(count_query, params)).scalar()
+        rows = (await db.execute(data_query, params)).fetchall()
+        
+        # Return raw dict list for the Pydantic model to parse
+        return {
+            "total": total, "page": page, "limit": limit,
+            "data": [
+                {
+                    "id": row[0], "user_id": row[1], "email": row[2], 
+                    "status": row[3], "subscribed_at": row[4], "unsubscribed_at": row[5]
+                } for row in rows
+            ]
+        }
     
 # Wishlist functions
 async def get_or_create_wishlist(user_id: uuid.UUID,db: AsyncSession = Depends(get_db)):
