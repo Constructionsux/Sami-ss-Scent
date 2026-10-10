@@ -10,7 +10,8 @@ from fastapi import Header, HTTPException, Depends
 from app.models import User, Product, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, DeliveryZone
 from app.schemas import UserCreate, UserLogin, OrderCreate
 from app.database import get_db
-
+import asyncio
+import resend
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
@@ -182,6 +183,70 @@ async def verify_admin_token(x_admin_token: str = Header(None)):
     return True
 
 
+
+
+# ============================================================
+# Email Template & Background Sender
+# ============================================================
+def get_welcome_email_html() -> str:
+    """Returns the professional HTML email template."""
+    return """
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FAFAFA; color: #1A1A1A;">
+        <!-- Header -->
+        <div style="padding: 40px 20px; text-align: center; border-bottom: 1px solid #E5E5E5; background-color: #FFFFFF;">
+            <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; margin: 0; color: #1A1A1A; letter-spacing: -0.5px;">
+                Sami's <span style="color: #8C735A; font-style: italic;">Scent</span>
+            </h1>
+        </div>
+        
+        <!-- Body -->
+        <div style="padding: 40px 30px; background-color: #FFFFFF; border: 1px solid #E5E5E5; border-top: none;">
+            <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; margin-top: 0; margin-bottom: 20px; color: #1A1A1A;">Welcome to the Inner Circle.</h2>
+            
+            <p style="font-size: 16px; line-height: 1.6; color: #4A4A5A; margin-bottom: 20px;">
+                Thank you for joining us. At Sami's Scent, we believe fragrance is the most intense form of memory. 
+            </p>
+            <p style="font-size: 16px; line-height: 1.6; color: #4A4A5A; margin-bottom: 20px;">
+                As a subscriber, you will be the first to experience our new fragrance launches, discover the craftsmanship behind our blends, and receive exclusive brand stories.
+            </p>
+            
+            <div style="text-align: center; margin: 35px 0;">
+                <a href="https://samisscent.com/shop" style="background-color: #8C735A; color: #FFFFFF; padding: 14px 32px; text-decoration: none; border-radius: 50px; font-weight: 500; font-size: 14px; letter-spacing: 0.5px; display: inline-block;">
+                    Explore the Collection
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 30px 20px; text-align: center; font-size: 12px; color: #999999; background-color: #FAFAFA;">
+            <p style="margin-bottom: 10px;">&copy; 2026 Sami's Scent. All rights reserved.</p>
+            <p style="margin: 0;">
+                <a href="#" style="color: #8C735A; text-decoration: underline;">Unsubscribe</a> &nbsp;•&nbsp; 
+                <a href="#" style="color: #8C735A; text-decoration: underline;">Privacy Policy</a>
+            </p>
+        </div>
+    </div>
+    """
+
+async def send_welcome_email_async(to_email: str):
+    """Sends the email in a background thread to prevent blocking the API."""
+    try:
+        resend.api_key = os.getenv("RESEND_API_KEY")
+        params = {
+            "from": os.getenv("RESEND_FROM_EMAIL", "Sami's Scent <onboarding@resend.dev>"),
+            "to": to_email,
+            "subject": "Welcome to Sami's Scent",
+            "html": get_welcome_email_html()
+        }
+        # Run the synchronous Resend SDK in a background thread
+        await asyncio.to_thread(resend.Emails.send, params)
+    except Exception as e:
+        print(f"Failed to send welcome email to {to_email}: {e}")
+
+
+# ============================================================
+# Subscription Service
+# ============================================================
 class SubscriptionService:
     
     @staticmethod
@@ -204,11 +269,13 @@ class SubscriptionService:
             RETURNING user_id, status
         """)
         
-        # full_name defaults to 'Subscriber' for newsletter only
+        # Execute DB transaction
         await db.execute(query, {"email": data.email, "full_name": "Newsletter Subscriber"})
         await db.commit()
         
-        # TODO: Trigger async email sending here
+        # Trigger email in the background (Fire and forget)
+        asyncio.create_task(send_welcome_email_async(data.email))
+        
         return {"status": "success", "message": "Welcome to the inner circle."}
 
     @staticmethod
@@ -240,7 +307,6 @@ class SubscriptionService:
         total = (await db.execute(count_query, params)).scalar()
         rows = (await db.execute(data_query, params)).fetchall()
         
-        # Return raw dict list for the Pydantic model to parse
         return {
             "total": total, "page": page, "limit": limit,
             "data": [
