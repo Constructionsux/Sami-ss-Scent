@@ -2,7 +2,7 @@ import uuid
 import os
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, text 
 from sqlalchemy.orm import selectinload
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -184,7 +184,7 @@ async def verify_admin_token(x_admin_token: str = Header(None)):
 
 class SubscriptionService:
     @staticmethod
-    async def subscribe(db: AsyncSession, data) -> dict:
+    async def subscribe(data,db: AsyncSession = Depends(get_db),) -> dict:
         """Atomic Upsert for newsletter subscription"""
         query = text("""
             WITH upserted_user AS (
@@ -211,7 +211,7 @@ class SubscriptionService:
         return {"status": "success", "message": "Welcome to the inner circle."}
 
     @staticmethod
-    async def get_subscribers(db: AsyncSession, page: int, limit: int, status: str, search: str):
+    async def get_subscribers(page: int, limit: int, status: str, search: str,db: AsyncSession = Depends(get_db),):
         offset = (page - 1) * limit
         
         count_query = text("""
