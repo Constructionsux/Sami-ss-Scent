@@ -70,43 +70,45 @@ async def get_products(
         for p in products
     ]
 
+
+
 @router.get("/featured")
 async def get_featured_products(db: AsyncSession = Depends(get_db)):
-    query = select(Product).where(Product.is_active == True, Product.is_featured == True).limit(3)
-    result = await db.execute(query)
-    products = result.scalars().all()
-    return [{"id": str(p.id), "name": p.name, "description": p.description, "image_url": p.image_url} for p in products]
-
-@router.get("/new-arrivals")
-async def get_new_arrivals(db: AsyncSession = Depends(get_db)):
-    query = select(Product).where(Product.is_active == True).order_by(Product.created_at.desc()).limit(8)
+    # FIX: Added .options(selectinload(Product.brand))
+    query = select(Product).where(Product.is_active == True, Product.is_featured == True).options(selectinload(Product.brand)).limit(3)
     result = await db.execute(query)
     products = result.scalars().all()
     return [
         {
-            "id": str(p.id),
-            "name": p.name,
-            "price": float(p.price),
-            "image_url": p.image_url,
-            "brand": {"name": p.brand.name} if p.brand else None
-        }
-        for p in products
+            "id": str(p.id), "name": p.name, "description": p.description, 
+            "image_url": p.image_url, "brand": {"name": p.brand.name} if p.brand else None
+        } for p in products
+    ]
+
+@router.get("/new-arrivals")
+async def get_new_arrivals(db: AsyncSession = Depends(get_db)):
+    # FIX: Added .options(selectinload(Product.brand))
+    query = select(Product).where(Product.is_active == True).options(selectinload(Product.brand)).order_by(Product.created_at.desc()).limit(8)
+    result = await db.execute(query)
+    products = result.scalars().all()
+    return [
+        {
+            "id": str(p.id), "name": p.name, "price": float(p.price), 
+            "image_url": p.image_url, "brand": {"name": p.brand.name} if p.brand else None
+        } for p in products
     ]
 
 @router.get("/bestsellers")
 async def get_bestsellers(db: AsyncSession = Depends(get_db)):
-    query = select(Product).where(Product.is_active == True).order_by(Product.sales_count.desc()).limit(8)
+    # FIX: Added .options(selectinload(Product.brand))
+    query = select(Product).where(Product.is_active == True).options(selectinload(Product.brand)).order_by(Product.sales_count.desc()).limit(8)
     result = await db.execute(query)
     products = result.scalars().all()
     return [
         {
-            "id": str(p.id),
-            "name": p.name,
-            "price": float(p.price),
-            "image_url": p.image_url,
-            "brand": {"name": p.brand.name} if p.brand else None
-        }
-        for p in products
+            "id": str(p.id), "name": p.name, "price": float(p.price), 
+            "image_url": p.image_url, "brand": {"name": p.brand.name} if p.brand else None
+        } for p in products
     ]
 
 @router.get("/{product_id}")
