@@ -71,13 +71,70 @@ async function loadCategories() {
         console.error('Failed to load categories:', error);
     }
 }
+// --- Mobile Menu Toggle ---
+function initMobileMenu() {
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.getElementById('shopNavLinks');
+    if (menuBtn && navLinks) {
+        menuBtn.addEventListener('click', () => navLinks.classList.toggle('active'));
+    }
+}
+
+// --- Search Functionality ---
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    const performSearch = () => {
+        const query = searchInput.value.trim();
+        if (query) window.location.href = `/shop?search=${encodeURIComponent(query)}`;
+    };
+    
+    if (searchBtn) searchBtn.addEventListener('click', performSearch);
+    if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+}
+
+// --- Profile Dropdown ---
+function initProfileMenu() {
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const token = localStorage.getItem('access_token');
+    
+    if (profileBtn && profileDropdown) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', () => profileDropdown.classList.remove('show'));
+        
+        if (token) {
+            profileDropdown.innerHTML = `
+                <a href="/account">My Account</a>
+                <a href="/orders">My Orders</a>
+                <a href="#" onclick="logout()">Logout</a>
+            `;
+        } else {
+            profileDropdown.innerHTML = `
+                <a href="/login">Login</a>
+                <a href="/login?tab=register">Register</a>
+            `;
+        }
+    }
+}
+
+function logout() {
+    localStorage.removeItem('access_token');
+    window.location.href = '/';
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadBrands();
     loadCategories();
     loadProducts();
-    
+        initMobileMenu();
+    initSearch();
+    initProfileMenu();
     // Filter change handlers
     document.getElementById('brandFilter')?.addEventListener('change', loadProducts);
     document.getElementById('categoryFilter')?.addEventListener('change', loadProducts);
