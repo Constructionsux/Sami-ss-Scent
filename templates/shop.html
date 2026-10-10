@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop All | Sami's Scent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/shop.css">
+</head>
+<body>
+    <!-- Navigation (Same as Homepage) -->
+    <nav class="shop-nav">
+        <div class="shop-nav-container">
+            <div class="shop-nav-left">
+                <span class="currency-display">₦ NGN</span>
+                <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+                <div class="shop-nav-links" id="shopNavLinks">
+                    <a href="/shop-home">Home</a>
+                    <a href="/shop" class="active">Shop</a>
+                    <a href="/wishlist">Wishlist</a>
+                </div>
+            </div>
+            
+            <a href="/shop-home" class="logo"><span class="logo-text">Sami's <em>Scent</em></span></a>
+            
+            <div class="shop-nav-right">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search perfumes...">
+                    <button id="searchBtn" style="background:none; border:none; cursor:pointer;"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="icon-btn-wrapper">
+                    <button class="icon-btn" id="profileBtn"><i class="fas fa-user"></i></button>
+                    <div class="profile-dropdown" id="profileDropdown"></div>
+                </div>
+                <a href="/cart" class="icon-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Shop Header & Filters -->
+    <section class="section" style="padding-top: 6rem;">
+        <div class="container">
+            <h1 class="section-title" id="shopTitle">All Fragrances</h1>
+            
+            <div class="shop-filters">
+                <select id="brandFilter" class="filter-select">
+                    <option value="">All Brands</option>
+                </select>
+                <select id="categoryFilter" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="sortFilter" class="filter-select">
+                    <option value="newest">Newest Arrivals</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="bestselling">Bestselling</option>
+                </select>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="product-grid" id="productGrid">
+                <p style="text-align:center; grid-column: 1/-1;">Loading products...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="shop-footer">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <span class="logo-text">Sami's <em>Scent</em></span>
+                <p style="margin-top: 1rem; color: var(--color-text-secondary);">Luxury fragrances crafted for the modern soul.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Store Links</h4>
+                <a href="/shop-home">Home</a><a href="/shop">Shop</a><a href="/login">Login</a>
+            </div>
+            <div class="footer-section">
+                <h4>Useful Links</h4>
+                <a href="#">About Us</a><a href="#">FAQs</a><a href="#">Contact Us</a>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <a href="https://instagram.com/samisscent"><i class="fab fa-instagram"></i> Instagram</a>
+                <a href="https://wa.me/2348000000000"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>&copy; 2026 Sami's Scent. All rights reserved.</p></div>
+    </footer>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/cart.js"></script>
+    <script src="/static/js/shop.js"></script>
+    
+    <script>
+        // Shop Page Specific Logic
+        async function loadShopProducts() {
+            // Get URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const search = urlParams.get('search') || '';
+            const categorySlug = urlParams.get('category_slug') || '';
+            const brandSlug = urlParams.get('brand_slug') || '';
+            const sort = document.getElementById('sortFilter').value;
+
+            // Update Title based on filter
+            if (search) document.getElementById('shopTitle').textContent = `Search: "${search}"`;
+            else if (categorySlug) document.getElementById('shopTitle').textContent = categorySlug.replace(/-/g, ' ').toUpperCase();
+
+            // Set dropdown values
+            document.getElementById('categoryFilter').value = categorySlug;
+            document.getElementById('brandFilter').value = brandSlug;
+            document.getElementById('searchInput').value = search;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (categorySlug) params.append('category_slug', categorySlug);
+            if (brandSlug) params.append('brand_slug', brandSlug);
+            params.append('sort', sort);
+
+            try {
+                const products = await apiRequest(`/api/products/?${params}`);
+                const grid = document.getElementById('productGrid');
+                
+                if (products.length === 0) {
+                    grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; padding: 3rem;">No products found.</p>';
+                    return;
+                }
+
+                grid.innerHTML = products.map(p => `
+                    <div class="product-card">
+                        <a href="/product/${p.id}" class="product-image">
+                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}" loading="lazy">
+                        </a>
+                        <div class="product-info">
+                            <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
+                            <h3 class="product-name">${p.name}</h3>
+                            <div class="product-price">
+                                <span class="current-price">₦${parseFloat(p.price).toLocaleString()}</span>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">Add to Cart</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load products:', error);
+            }
+        }
+
+        async function loadFilters() {
+            try {
+                const brands = await apiRequest('/api/products/brands/list');
+                document.getElementById('brandFilter').innerHTML += brands.map(b => `<option value="${b.slug}">${b.name}</option>`).join('');
+                
+                const categories = await apiRequest('/api/products/categories/list');
+                document.getElementById('categoryFilter').innerHTML += categories.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFilters();
+            loadShopProducts();
+            
+            document.getElementById('brandFilter').addEventListener('change', (e) => {
+                window.location.href = `/shop?brand_slug=${e.target.value}`;
+            });
+            document.getElementById('categoryFilter').addEventListener('change', (e) => {
+                window.location.href = `/shop?category_slug=${e.target.value}`;
+            });
+            document.getElementById('sortFilter').addEventListener('change', loadShopProducts);
+        });
+    </script>
+</body>
+</html>
