@@ -109,7 +109,7 @@ app.include_router(orders.router)
 async def subscribe(data: SubscribeRequest, db: AsyncSession = Depends(get_db)):
     """Handle newsletter subscription via Resend"""
     try:
-        return await SubscriptionService.subscribe(db, data)
+        return await SubscriptionService.subscribe(data,db)
     except HTTPException:
         raise
     except Exception as e:
