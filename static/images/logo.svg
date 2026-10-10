@@ -1,0 +1,12 @@
+<svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Icon -->
+    <g transform="translate(10, 20)">
+        <circle cx="40" cy="40" r="38" stroke="#8C735A" stroke-width="2"/>
+        <path d="M52 28C52 23.5817 48.4183 20 44 20H36C31.5817 20 28 23.5817 28 28C28 32.4183 31.5817 36 36 36H44C48.4183 36 52 39.5817 52 44C52 48.4183 48.4183 52 44 52H36C31.5817 52 28 48.4183 28 44" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+        <path d="M40 32C40 32 34 40 34 43C34 46.3137 36.6863 49 40 49C43.3137 49 46 46.3137 46 43C46 40 40 32 40 32Z" fill="#8C735A"/>
+    </g>
+    
+    <!-- Text -->
+    <text x="100" y="55" font-family="'Playfair Display', Georgia, serif" font-size="48" font-weight="700" fill="#1A1A1A" letter-spacing="-1">Sami's</text>
+    <text x="102" y="90" font-family="'Playfair Display', Georgia, serif" font-size="28" font-weight="400" font-style="italic" fill="#8C735A" letter-spacing="2">SCENT</text>
+</svg>
