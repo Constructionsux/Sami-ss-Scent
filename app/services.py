@@ -6,9 +6,10 @@ from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Depends
 from app.models import User, Product, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, DeliveryZone
 from app.schemas import UserCreate, UserLogin, OrderCreate
+from app.database import get_db
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -28,7 +29,7 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(token: str, db: AsyncSession):
+async def get_current_user(token: str, db: AsyncSession = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
@@ -44,7 +45,7 @@ async def get_current_user(token: str, db: AsyncSession):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # Cart functions
-async def get_or_create_cart(db: AsyncSession, user_id: uuid.UUID = None, guest_token: str = None):
+async def get_or_create_cart(db: AsyncSession = Depends(get_db), user_id: uuid.UUID = None, guest_token: str = None):
     if user_id:
         result = await db.execute(select(Cart).where(Cart.user_id == user_id))
         cart = result.scalar_one_or_none()
@@ -65,7 +66,7 @@ async def get_or_create_cart(db: AsyncSession, user_id: uuid.UUID = None, guest_
             await db.refresh(cart)
     return cart
 
-async def add_to_cart(db: AsyncSession, cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int):
+async def add_to_cart(db: AsyncSession = Depends(get_db), cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int):
     # Check product exists and has stock
     result = await db.execute(select(Product).where(Product.id == product_id, Product.is_active == True))
     product = result.scalar_one_or_none()
@@ -90,7 +91,7 @@ async def add_to_cart(db: AsyncSession, cart_id: uuid.UUID, product_id: uuid.UUI
     return cart_item
 
 # Order functions
-async def calculate_shipping(db: AsyncSession, state: str, city: str = None) -> float:
+async def calculate_shipping(db: AsyncSession = Depends(get_db), state: str, city: str = None) -> float:
     """Calculate shipping fee based on state/city"""
     result = await db.execute(
         select(DeliveryZone).where(DeliveryZone.state.ilike(f"%{state}%"))
@@ -101,7 +102,7 @@ async def calculate_shipping(db: AsyncSession, state: str, city: str = None) -> 
         return float(zone.base_fee)
     return 3500.0  # Default shipping fee
 
-async def create_order(db: AsyncSession, user: User, request: OrderCreate, guest_token: str = None):
+async def create_order(db: AsyncSession = Depends(get_db), user: User, request: OrderCreate, guest_token: str = None):
     # Get cart
     cart = await get_or_create_cart(db, user.id if user else None, guest_token)
     
@@ -181,7 +182,7 @@ async def verify_admin_token(x_admin_token: str = Header(None)):
     return True
     
 # Wishlist functions
-async def get_or_create_wishlist(db: AsyncSession, user_id: uuid.UUID):
+async def get_or_create_wishlist(db: AsyncSession = Depends(get_db), user_id: uuid.UUID):
     result = await db.execute(select(Wishlist).where(Wishlist.user_id == user_id))
     wishlist = result.scalar_one_or_none()
     if not wishlist:
