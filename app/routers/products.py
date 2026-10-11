@@ -10,40 +10,42 @@ router = APIRouter(prefix="/api/products", tags=["Products"])
 
 @router.get("/")
 async def get_products(
+    search: Optional[str] = None,
     brand_slug: Optional[str] = None,
     category_slug: Optional[str] = None,
-    sort: Optional[str] = Query("newest", enum=["newest", "oldest", "price_asc", "price_desc", "bestselling", "top_rated"]),
+    sort: str = "newest",
     page: int = Query(1, ge=1),
     limit: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
+    # Base query with eager loading to prevent MissingGreenlet errors
     query = select(Product).where(Product.is_active == True).options(
         selectinload(Product.brand),
         selectinload(Product.category)
     )
     
-    # Filter by brand
+    # --- SEARCH FIX: Case-insensitive partial matching ---
+    if search:
+        # % acts as a wildcard. ilike makes it case-insensitive.
+        search_term = f"%{search}%" 
+        query = query.where(Product.name.ilike(search_term))
+
     if brand_slug:
         query = query.where(Product.brand.has(Brand.slug == brand_slug))
-    
-    # Filter by category
+        
     if category_slug:
-        query = query.where(Product.category.has(Category.slug == category_slug))
-    
+        query = query.where(Product.category.has(slug=category_slug))
+        
     # Sorting
-    if sort == "newest":
-        query = query.order_by(Product.created_at.desc())
-    elif sort == "oldest":
-        query = query.order_by(Product.created_at.asc())
-    elif sort == "price_asc":
+    if sort == "price_asc":
         query = query.order_by(Product.price.asc())
     elif sort == "price_desc":
         query = query.order_by(Product.price.desc())
     elif sort == "bestselling":
         query = query.order_by(Product.sales_count.desc())
-    elif sort == "top_rated":
-        query = query.order_by(Product.rating.desc())
-    
+    else: # newest
+        query = query.order_by(Product.created_at.desc())
+        
     # Pagination
     offset = (page - 1) * limit
     query = query.offset(offset).limit(limit)
@@ -53,23 +55,15 @@ async def get_products(
     
     return [
         {
-            "id": str(p.id),
-            "name": p.name,
-            "slug": p.slug,
-            "description": p.description,
-            "price": float(p.price),
+            "id": str(p.id), "name": p.name, "slug": p.slug, 
+            "description": p.description, "price": float(p.price), 
             "compare_at_price": float(p.compare_at_price) if p.compare_at_price else None,
-            "stock_quantity": p.stock_quantity,
-            "image_url": p.image_url,
-            "is_featured": p.is_featured,
-            "rating": float(p.rating),
-            "sales_count": p.sales_count,
+            "stock_quantity": p.stock_quantity, "image_url": p.image_url,
             "brand": {"name": p.brand.name, "slug": p.brand.slug} if p.brand else None,
             "category": {"name": p.category.name, "slug": p.category.slug} if p.category else None
         }
         for p in products
     ]
-
 
 
 @router.get("/featured")
