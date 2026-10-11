@@ -4,7 +4,7 @@ import asyncio
 import resend
 from datetime import datetime, timedelta
 from typing import Optional
-from app.database import get_db
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, text
 from sqlalchemy.orm import selectinload
@@ -15,10 +15,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.models import (
     User, Product, Cart, CartItem, Wishlist, WishlistItem, 
-    Order, OrderItem, DeliveryZone
+    Order, OrderItem, DeliveryZone, DeliveryPark
 )
 from app.schemas import OrderCreate
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
@@ -33,7 +32,7 @@ security = HTTPBearer(auto_error=False)
 # ============================================================
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db) # Depends is OKAY here because it's used by route handlers
+    db: AsyncSession = Depends(get_db)
 ):
     if not credentials:
         return None
@@ -70,32 +69,72 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def create_login_token(user_id: str) -> str:
+    to_encode = {"sub": user_id, "purpose": "login"}
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+async def send_login_email(email: str, login_token: str):
+    try:
+        resend.api_key = os.getenv("RESEND_API_KEY")
+        domain = os.getenv("APP_DOMAIN", "https://sami-scent.onrender.com")
+        callback_url = f"{domain}/login?token={login_token}"
+        
+        params = {
+            "from": os.getenv("RESEND_FROM_EMAIL", "Sami's Scent <onboarding@resend.dev>"),
+            "to": email,
+            "subject": "Your Secure Login Link for Sami's Scent",
+            "html": f"""
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem; color: #1A1A1A; border: 1px solid #e5e5e5; border-radius: 8px;">
+                <h2 style="font-family: 'Playfair Display', serif; color: #8C735A; text-align: center; margin-bottom: 1.5rem;">Sami's Scent</h2>
+                <p style="text-align: center; font-size: 1.1rem; margin-bottom: 1rem;">Hello,</p>
+                <p style="text-align: center; color: #4A4A5A; margin-bottom: 2rem;">You requested a secure, passwordless login link to your Sami's Scent account.</p>
+                <div style="text-align: center; margin: 2.5rem 0;">
+                    <a href="{callback_url}" style="background-color: #8C735A; color: white; padding: 14px 32px; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 1rem; display: inline-block;">
+                        Log In to Sami's Scent
+                    </a>
+                </div>
+                <p style="text-align: center; font-size: 0.85rem; color: #999999; margin-top: 2rem;">
+                    This link will expire in 15 minutes. If you did not request this, please ignore this email.
+                </p>
+            </div>
+            """
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+    except Exception as e:
+        print(f"Failed to send login email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send login email.")
+
 # ============================================================
-# 2. E-Commerce Services (NO Depends allowed here!)
+# 2. E-Commerce Services
 # ============================================================
 async def get_or_create_cart(
     db: AsyncSession, 
     user_id: Optional[uuid.UUID] = None, 
     guest_token: Optional[str] = None
 ):
+    # FIX: Eagerly load items and products to prevent MissingGreenlet async errors
+    query = select(Cart).options(
+        selectinload(Cart.items).selectinload(CartItem.product)
+    )
+    
     if user_id:
-        result = await db.execute(select(Cart).where(Cart.user_id == user_id))
-        cart = result.scalar_one_or_none()
-        if not cart:
-            cart = Cart(user_id=user_id)
-            db.add(cart)
-            await db.commit()
-            await db.refresh(cart)
+        query = query.where(Cart.user_id == user_id)
     else:
         if not guest_token:
             guest_token = str(uuid.uuid4())
-        result = await db.execute(select(Cart).where(Cart.guest_token == guest_token))
-        cart = result.scalar_one_or_none()
-        if not cart:
-            cart = Cart(guest_token=guest_token)
-            db.add(cart)
-            await db.commit()
-            await db.refresh(cart)
+        query = query.where(Cart.guest_token == guest_token)
+        
+    result = await db.execute(query)
+    cart = result.scalar_one_or_none()
+    
+    if not cart:
+        cart = Cart(user_id=user_id, guest_token=guest_token)
+        db.add(cart)
+        await db.commit()
+        await db.refresh(cart)
+        
     return cart
 
 async def add_to_cart(db: AsyncSession, cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int):
@@ -128,7 +167,7 @@ async def calculate_shipping(db: AsyncSession, state: str) -> float:
     return float(zone.base_fee) if zone else 3500.0
 
 async def create_order(db: AsyncSession, user: Optional[User], request: OrderCreate, guest_token: Optional[str] = None):
-    # Notice: We pass db=db explicitly, NO Depends here
+    # Fetch cart (items and products are already eagerly loaded by get_or_create_cart)
     cart = await get_or_create_cart(db=db, user_id=user.id if user else None, guest_token=guest_token)
     
     if not cart.items:
@@ -138,8 +177,8 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
     order_items = []
     
     for cart_item in cart.items:
-        result = await db.execute(select(Product).where(Product.id == cart_item.product_id))
-        product = result.scalar_one_or_none()
+        # FIX: product is safely accessible without triggering a lazy load
+        product = cart_item.product 
         
         if not product or not product.is_active:
             raise HTTPException(status_code=400, detail=f"Product {product.name if product else 'Unknown'} is no longer available")
@@ -157,6 +196,7 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
             total_price=line_total
         ))
         
+        # Deduct stock
         product.stock_quantity -= cart_item.quantity
         product.sales_count += cart_item.quantity
     
@@ -184,6 +224,7 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
     )
     db.add(order)
     
+    # Clear cart
     await db.execute(delete(CartItem).where(CartItem.cart_id == cart.id))
     await db.commit()
     await db.refresh(order)
@@ -286,50 +327,3 @@ class SubscriptionService:
                 } for row in rows
             ]
         }
-
-def create_login_token(user_id: str) -> str:
-    """Generates a short-lived (15 min) token specifically for login verification."""
-    SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
-    ALGORITHM = os.getenv("ALGORITHM", "HS256")
-    
-    to_encode = {"sub": user_id, "purpose": "login"}
-    expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-async def send_login_email(email: str, login_token: str):
-    """Sends the passwordless magic link to the user's email."""
-    try:
-        resend.api_key = os.getenv("RESEND_API_KEY")
-        
-        # This URL points back to the login page, which will auto-verify the token
-        # Note: Replace 'sami-scent.onrender.com' with your actual domain if different
-        domain = os.getenv("APP_DOMAIN", "https://sami-scent.onrender.com")
-        callback_url = f"{domain}/login?token={login_token}"
-        
-        params = {
-            "from": os.getenv("RESEND_FROM_EMAIL", "Sami's Scent <onboarding@resend.dev>"),
-            "to": email,
-            "subject": "Your Secure Login Link for Sami's Scent",
-            "html": f"""
-            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem; color: #1A1A1A; border: 1px solid #e5e5e5; border-radius: 8px;">
-                <h2 style="font-family: 'Playfair Display', serif; color: #8C735A; text-align: center; margin-bottom: 1.5rem;">Sami's Scent</h2>
-                <p style="text-align: center; font-size: 1.1rem; margin-bottom: 1rem;">Hello,</p>
-                <p style="text-align: center; color: #4A4A5A; margin-bottom: 2rem;">You requested a secure, passwordless login link to your Sami's Scent account.</p>
-                
-                <div style="text-align: center; margin: 2.5rem 0;">
-                    <a href="{callback_url}" style="background-color: #8C735A; color: white; padding: 14px 32px; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 1rem; display: inline-block;">
-                        Log In to Sami's Scent
-                    </a>
-                </div>
-                
-                <p style="text-align: center; font-size: 0.85rem; color: #999999; margin-top: 2rem;">
-                    This link will expire in 15 minutes. If you did not request this, please ignore this email.
-                </p>
-            </div>
-            """
-        }
-        await asyncio.to_thread(resend.Emails.send, params)
-    except Exception as e:
-        print(f"Failed to send login email: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send login email. Please try again.")
