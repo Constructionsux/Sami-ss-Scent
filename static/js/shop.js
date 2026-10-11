@@ -279,7 +279,7 @@ async function loadBrandsVertical() {
 
 async function loadCategoriesHorizontal() {
     try {
-        const categories = await apiRequest('/api/products/categories/list');
+        const categories = await apiRequest('/api/products/brands/list');
         const container = document.getElementById('categoriesScroll');
         
         if (!categories || categories.length === 0) return;
