@@ -4,175 +4,296 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shop All | Sami's Scent</title>
+    <link rel="icon" type="image/png" href="/static/images/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/shop.css">
+    <link rel="stylesheet" href="/static/css/shop-page.css">
 </head>
 <body>
-    <!-- Navigation (Same as Homepage) -->
-    <nav class="shop-nav">
-        <div class="shop-nav-container">
-            <div class="shop-nav-left">
-                <span class="currency-display">₦ NGN</span>
-                <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
-                <div class="shop-nav-links" id="shopNavLinks">
+    <!-- Marquee -->
+    <div class="marquee-container">
+        <div class="marquee-text">
+            Smell Nice. Feel Confident. • Shop Authentic Fragrances • Delivery Across Nigeria • Find Your Signature Scent • Luxury at Affordable Prices • Make Every Moment Memorable •
+        </div>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav">
+        <div class="desktop-nav-container">
+            <div class="desktop-nav-left">
+                <a href="/shop-home" class="desktop-logo">
+                    <img src="/static/images/logo.png" alt="Sami's Scent">
+                </a>
+                <div class="desktop-links">
                     <a href="/shop-home">Home</a>
                     <a href="/shop" class="active">Shop</a>
                     <a href="/wishlist">Wishlist</a>
+                    <a href="/login">Login</a>
                 </div>
             </div>
-            
-            <a href="/shop-home" class="logo"><span class="logo-text">Sami's <em>Scent</em></span></a>
-            
-            <div class="shop-nav-right">
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search perfumes...">
-                    <button id="searchBtn" style="background:none; border:none; cursor:pointer;"><i class="fas fa-search"></i></button>
+            <div class="desktop-nav-right">
+                <div class="currency-container">
+                    <span class="currency-text">🇬 NGN</span>
                 </div>
-                <div class="icon-btn-wrapper">
-                    <button class="icon-btn" id="profileBtn"><i class="fas fa-user"></i></button>
-                    <div class="profile-dropdown" id="profileDropdown"></div>
+                <div class="desktop-search">
+                    <input type="text" id="desktopSearchInput" placeholder="Search perfumes...">
+                    <button id="desktopSearchBtn"><i class="fas fa-search"></i></button>
                 </div>
-                <a href="/cart" class="icon-btn">
+                <button class="icon-btn-small" id="desktopAccountIcon" aria-label="Account">
+                    <i class="fas fa-user"></i>
+                </button>
+                <a href="/cart" class="icon-btn-small" aria-label="Cart">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-badge" id="cart-count">0</span>
+                    <span class="cart-badge" id="desktopCartCount">0</span>
                 </a>
             </div>
         </div>
     </nav>
 
-    <!-- Shop Header & Filters -->
-    <section class="section" style="padding-top: 6rem;">
+    <!-- Mobile Navigation Top Bar -->
+    <div class="mobile-nav-top">
+        <div class="mobile-nav-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <img src="/static/images/logo.png" alt="Sami's Scent Logo" class="mobile-logo">
+        </div>
+        <div class="mobile-nav-right">
+            <button class="icon-btn-small" id="mobileSearchIcon" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="icon-btn-small" id="mobileAccountIcon" aria-label="Account">
+                <i class="fas fa-user"></i>
+            </button>
+            <a href="/cart" class="icon-btn-small" aria-label="Cart">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge" id="mobileCartCount">0</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer" id="mobileMenuDrawer">
+        <div class="drawer-header">
+            <span class="logo-text">Sami's <em>Scent</em></span>
+            <button class="close-menu-btn" id="closeMenuBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="drawer-links">
+            <a href="/shop-home">Home</a>
+            <a href="/shop" class="active">Shop</a>
+            <a href="/wishlist">Wishlist</a>
+            <a href="/login">Login / Register</a>
+            <a href="/account">My Account</a>
+            <a href="/orders">My Orders</a>
+        </nav>
+    </div>
+
+    <!-- Search Popup Overlay -->
+    <div class="popup-overlay" id="searchOverlay">
+        <div class="popup-container search-popup">
+            <div class="popup-header">
+                <h3>Search Fragrances</h3>
+                <button class="close-popup-btn" id="closeSearchBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="text" id="searchInput" placeholder="Type to search perfumes, brands..." autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Account Popup Overlay -->
+    <div class="popup-overlay" id="accountOverlay">
+        <div class="popup-container account-popup">
+            <div class="popup-header">
+                <h3>My Account</h3>
+                <button class="close-popup-btn" id="closeAccountBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="accountContent">
+                <!-- Loaded dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Sidebar Overlay -->
+    <div class="filter-overlay" id="filterOverlay">
+        <div class="filter-sidebar">
+            <div class="filter-header">
+                <h3>Filters</h3>
+                <button class="close-filter-btn" id="closeFilterBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="filter-content">
+                <!-- Price Filter -->
+                <div class="filter-section">
+                    <h4>Price Range</h4>
+                    <div class="filter-group">
+                        <label>Min Price (₦)</label>
+                        <input type="number" id="minPrice" placeholder="0" min="0">
+                    </div>
+                    <div class="filter-group">
+                        <label>Max Price ()</label>
+                        <input type="number" id="maxPrice" placeholder="100000" min="0">
+                    </div>
+                </div>
+
+                <!-- Product Status Filter -->
+                <div class="filter-section">
+                    <h4>Product Status</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="inStock" checked>
+                            <span>In Stock</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="onSale">
+                            <span>On Sale</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Brand Filter -->
+                <div class="filter-section">
+                    <h4>Brand</h4>
+                    <select id="filterBrand" class="filter-select">
+                        <option value="">All Brands</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="filter-section">
+                    <h4>Category</h4>
+                    <select id="filterCategory" class="filter-select">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary btn-block" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-secondary btn-block" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Shop Content -->
+    <section class="shop-main">
         <div class="container">
-            <h1 class="section-title" id="shopTitle">All Fragrances</h1>
-            
-            <div class="shop-filters">
-                <select id="brandFilter" class="filter-select">
-                    <option value="">All Brands</option>
-                </select>
-                <select id="categoryFilter" class="filter-select">
-                    <option value="">All Categories</option>
-                </select>
-                <select id="sortFilter" class="filter-select">
-                    <option value="newest">Newest Arrivals</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
-                    <option value="bestselling">Bestselling</option>
-                </select>
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb" id="breadcrumb">
+                <a href="/shop-home">Home</a>
+                <span class="breadcrumb-separator">></span>
+                <a href="/shop">Shop</a>
+            </nav>
+
+            <!-- Shop Header -->
+            <div class="shop-header">
+                <h1 class="page-title">Shop</h1>
+                <button class="show-filters-btn" id="showFiltersBtn">
+                    <i class="fas fa-filter"></i> Show filters
+                </button>
+            </div>
+
+            <!-- Product Controls -->
+            <div class="product-controls">
+                <div class="control-group">
+                    <span class="control-label">All Products</span>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Category</span>
+                    <div class="dropdown-wrapper">
+                        <select id="categoryDropdown" class="dropdown-select">
+                            <option value="">View all</option>
+                        </select>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Sort by</span>
+                    <div class="dropdown-wrapper">
+                        <select id="sortDropdown" class="dropdown-select">
+                            <option value="newest">Newest Arrivals</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                            <option value="bestselling">Bestselling</option>
+                        </select>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </div>
+                </div>
             </div>
 
             <!-- Product Grid -->
             <div class="product-grid" id="productGrid">
-                <p style="text-align:center; grid-column: 1/-1;">Loading products...</p>
+                <div class="loading-state">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <p>Loading products...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination buttons injected by JS -->
             </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="shop-footer">
-        <div class="footer-grid">
-            <div class="footer-section">
-                <span class="logo-text">Sami's <em>Scent</em></span>
-                <p style="margin-top: 1rem; color: var(--color-text-secondary);">Luxury fragrances crafted for the modern soul.</p>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <span class="logo-text">Sami's <em>Scent</em></span>
+                    <p style="margin-top: 1rem; color: var(--color-text-secondary);">Luxury fragrances crafted for the modern soul.</p>
+                    <p style="margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.9rem;">
+                        Lagos, Nigeria<br>
+                        +234 816 287 6620<br>
+                        hello@samisscent.com
+                    </p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Store Links</h4>
+                    <a href="/shop-home">Home</a>
+                    <a href="/shop">Shop</a>
+                    <a href="/login">Login/Register</a>
+                    <a href="/wishlist">Wishlist</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Useful Links</h4>
+                    <a href="#">About Us</a>
+                    <a href="#">FAQs</a>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Shipping Policy</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="https://www.instagram.com/sami.scent?stkn=MXcwZTRoNDUyOWM2MQ%3D%3D&utm_source=qr" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@perfvendorinota?_r=1&_t=ZS-9AKIsPYe475" target="_blank"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
             </div>
-            <div class="footer-section">
-                <h4>Store Links</h4>
-                <a href="/shop-home">Home</a><a href="/shop">Shop</a><a href="/login">Login</a>
-            </div>
-            <div class="footer-section">
-                <h4>Useful Links</h4>
-                <a href="#">About Us</a><a href="#">FAQs</a><a href="#">Contact Us</a>
-            </div>
-            <div class="footer-section">
-                <h4>Follow Us</h4>
-                <a href="https://instagram.com/samisscent"><i class="fab fa-instagram"></i> Instagram</a>
-                <a href="https://wa.me/2348000000000"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Sami's Scent. All rights reserved.</p>
             </div>
         </div>
-        <div class="footer-bottom"><p>&copy; 2026 Sami's Scent. All rights reserved.</p></div>
     </footer>
 
+    <!-- Floating Action Buttons -->
+    <a href="/cart" class="floating-cart" aria-label="View Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="floatingCartCount">0</span>
+    </a>
+    
+    <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank" class="floating-whatsapp" aria-label="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Scripts -->
     <script src="/static/js/api.js"></script>
     <script src="/static/js/cart.js"></script>
     <script src="/static/js/shop.js"></script>
-    
-    <script>
-        // Shop Page Specific Logic
-        async function loadShopProducts() {
-            // Get URL params
-            const urlParams = new URLSearchParams(window.location.search);
-            const search = urlParams.get('search') || '';
-            const categorySlug = urlParams.get('category_slug') || '';
-            const brandSlug = urlParams.get('brand_slug') || '';
-            const sort = document.getElementById('sortFilter').value;
-
-            // Update Title based on filter
-            if (search) document.getElementById('shopTitle').textContent = `Search: "${search}"`;
-            else if (categorySlug) document.getElementById('shopTitle').textContent = categorySlug.replace(/-/g, ' ').toUpperCase();
-
-            // Set dropdown values
-            document.getElementById('categoryFilter').value = categorySlug;
-            document.getElementById('brandFilter').value = brandSlug;
-            document.getElementById('searchInput').value = search;
-
-            const params = new URLSearchParams();
-            if (search) params.append('search', search);
-            if (categorySlug) params.append('category_slug', categorySlug);
-            if (brandSlug) params.append('brand_slug', brandSlug);
-            params.append('sort', sort);
-
-            try {
-                const products = await apiRequest(`/api/products/?${params}`);
-                const grid = document.getElementById('productGrid');
-                
-                if (products.length === 0) {
-                    grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; padding: 3rem;">No products found.</p>';
-                    return;
-                }
-
-                grid.innerHTML = products.map(p => `
-                    <div class="product-card">
-                        <a href="/product/${p.id}" class="product-image">
-                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}" loading="lazy">
-                        </a>
-                        <div class="product-info">
-                            <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
-                            <h3 class="product-name">${p.name}</h3>
-                            <div class="product-price">
-                                <span class="current-price">₦${parseFloat(p.price).toLocaleString()}</span>
-                            </div>
-                            <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">Add to Cart</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Failed to load products:', error);
-            }
-        }
-
-        async function loadFilters() {
-            try {
-                const brands = await apiRequest('/api/products/brands/list');
-                document.getElementById('brandFilter').innerHTML += brands.map(b => `<option value="${b.slug}">${b.name}</option>`).join('');
-                
-                const categories = await apiRequest('/api/products/categories/list');
-                document.getElementById('categoryFilter').innerHTML += categories.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
-            } catch (e) { console.error(e); }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFilters();
-            loadShopProducts();
-            
-            document.getElementById('brandFilter').addEventListener('change', (e) => {
-                window.location.href = `/shop?brand_slug=${e.target.value}`;
-            });
-            document.getElementById('categoryFilter').addEventListener('change', (e) => {
-                window.location.href = `/shop?category_slug=${e.target.value}`;
-            });
-            document.getElementById('sortFilter').addEventListener('change', loadShopProducts);
-        });
-    </script>
+    <script src="/static/js/shop-page.js"></script>
 </body>
 </html>
