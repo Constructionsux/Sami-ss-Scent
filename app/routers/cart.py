@@ -26,9 +26,13 @@ async def get_cart(
     db: AsyncSession = Depends(get_db)
 ):
     cart = await get_or_create_cart(db=db, user_id=user.id if user else None, guest_token=x_guest_token)
+    
+    # FIX: Added .selectinload(Product.brand) to prevent the MissingGreenlet async error
     result = await db.execute(
         select(Cart).where(Cart.id == cart.id).options(
-            selectinload(Cart.items).selectinload(CartItem.product)
+            selectinload(Cart.items)
+            .selectinload(CartItem.product)
+            .selectinload(Product.brand)
         )
     )
     cart = result.scalar_one()
@@ -67,7 +71,7 @@ async def add_item(
 @router.patch("/items/{item_id}")
 async def update_item_quantity(
     item_id: str,
-    item_data: CartItemUpdate, # <-- FIX: Accepts JSON body now
+    item_data: CartItemUpdate,
     user: Optional[User] = Depends(get_current_user),
     x_guest_token: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
