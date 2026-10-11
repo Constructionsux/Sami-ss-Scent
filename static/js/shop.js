@@ -34,7 +34,6 @@ function initMobileMenu() {
         menuBtn.addEventListener('click', () => drawer.classList.add('active'));
         closeBtn.addEventListener('click', () => drawer.classList.remove('active'));
         
-        // Close when clicking outside
         document.addEventListener('click', (e) => {
             if (!drawer.contains(e.target) && !menuBtn.contains(e.target)) {
                 drawer.classList.remove('active');
@@ -54,7 +53,6 @@ function initPopups() {
     if (closeSearch) closeSearch.addEventListener('click', () => searchOverlay.classList.remove('active'));
     if (closeAccount) closeAccount.addEventListener('click', () => accountOverlay.classList.remove('active'));
 
-    // Close on overlay click
     if (searchOverlay) {
         searchOverlay.addEventListener('click', (e) => {
             if (e.target === searchOverlay) searchOverlay.classList.remove('active');
@@ -67,20 +65,22 @@ function initPopups() {
     }
 }
 
-/* --- Search Logic with Debounce --- */
+/* --- Search Logic --- */
 function initSearch() {
-    const searchIcon = document.getElementById('searchIcon');
+    const mobileSearchIcon = document.getElementById('mobileSearchIcon');
+    const desktopSearchBtn = document.getElementById('desktopSearchBtn');
     const searchOverlay = document.getElementById('searchOverlay');
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
     let searchTimeout;
 
-    if (searchIcon && searchOverlay) {
-        searchIcon.addEventListener('click', () => {
-            searchOverlay.classList.add('active');
-            setTimeout(() => searchInput.focus(), 100);
-        });
-    }
+    const openSearch = () => {
+        searchOverlay.classList.add('active');
+        setTimeout(() => searchInput.focus(), 100);
+    };
+
+    if (mobileSearchIcon) mobileSearchIcon.addEventListener('click', openSearch);
+    if (desktopSearchBtn) desktopSearchBtn.addEventListener('click', openSearch);
 
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -111,47 +111,47 @@ function initSearch() {
                     }
                 } catch (error) {
                     console.error('Search error:', error);
-                    searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-error, #9b2226);">Error searching</p>';
                 }
-            }, 300); // 300ms debounce
+            }, 300);
         });
     }
 }
 
 /* --- Account Popup Logic --- */
 function initAccount() {
-    const accountIcon = document.getElementById('accountIcon');
+    const mobileAccountIcon = document.getElementById('mobileAccountIcon');
+    const desktopAccountIcon = document.getElementById('desktopAccountIcon');
     const accountOverlay = document.getElementById('accountOverlay');
     const accountContent = document.getElementById('accountContent');
 
-    if (accountIcon && accountOverlay) {
-        accountIcon.addEventListener('click', async () => {
-            const token = localStorage.getItem('access_token');
-            
-            if (token) {
-                try {
-                    const user = await apiRequest('/api/auth/me');
-                    accountContent.innerHTML = `
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--color-border, #e5e5e5); margin-bottom: 0.5rem;">
-                            <div style="font-weight: 600; font-size: 1.1rem;">${user.full_name}</div>
-                            <div style="color: var(--color-text-muted, #999); font-size: 0.9rem;">${user.email}</div>
-                        </div>
-                        <a href="/account" class="account-option">My Account</a>
-                        <a href="/orders" class="account-option">My Orders</a>
-                        <a href="/wishlist" class="account-option">My Wishlist</a>
-                        <a href="#" class="account-option" style="color: var(--color-error, #9b2226);" onclick="logout(); return false;">Logout</a>
-                    `;
-                } catch (error) {
-                    // Token invalid, show login
-                    showLoginOptions(accountContent);
-                }
-            } else {
+    const openAccount = async () => {
+        const token = localStorage.getItem('access_token');
+        
+        if (token) {
+            try {
+                const user = await apiRequest('/api/auth/me');
+                accountContent.innerHTML = `
+                    <div style="padding: 1rem; border-bottom: 1px solid var(--color-border, #e5e5e5); margin-bottom: 0.5rem;">
+                        <div style="font-weight: 600; font-size: 1.1rem;">${user.full_name}</div>
+                        <div style="color: var(--color-text-muted, #999); font-size: 0.9rem;">${user.email}</div>
+                    </div>
+                    <a href="/account" class="account-option">My Account</a>
+                    <a href="/orders" class="account-option">My Orders</a>
+                    <a href="/wishlist" class="account-option">My Wishlist</a>
+                    <a href="#" class="account-option" style="color: var(--color-error, #9b2226);" onclick="logout(); return false;">Logout</a>
+                `;
+            } catch (error) {
                 showLoginOptions(accountContent);
             }
-            
-            accountOverlay.classList.add('active');
-        });
-    }
+        } else {
+            showLoginOptions(accountContent);
+        }
+        
+        accountOverlay.classList.add('active');
+    };
+
+    if (mobileAccountIcon) mobileAccountIcon.addEventListener('click', openAccount);
+    if (desktopAccountIcon) desktopAccountIcon.addEventListener('click', openAccount);
 }
 
 function showLoginOptions(container) {
@@ -190,7 +190,7 @@ function initNewsletter() {
                 });
                 
                 if (typeof showToast === 'function') {
-                    showToast('Thank you for subscribing to our newsletter!', 'success');
+                    showToast('Thank you for subscribing!', 'success');
                 } else {
                     alert('Thank you for subscribing!');
                 }
@@ -199,7 +199,7 @@ function initNewsletter() {
                 if (typeof showToast === 'function') {
                     showToast(error.message || 'Failed to subscribe', 'error');
                 } else {
-                    alert('Failed to subscribe. Please try again.');
+                    alert('Failed to subscribe.');
                 }
             } finally {
                 btn.disabled = false;
@@ -210,7 +210,6 @@ function initNewsletter() {
 }
 
 /* --- Dynamic Content Loaders --- */
-
 async function loadCarousel() {
     try {
         const products = await apiRequest('/api/products/featured');
@@ -245,7 +244,6 @@ async function loadCarousel() {
             </div>
         `).join('');
         
-        // Auto-slide logic
         let currentSlide = 0;
         setInterval(() => {
             currentSlide = (currentSlide + 1) % products.length;
@@ -329,7 +327,6 @@ async function loadHorizontalProducts(endpoint, containerId) {
 
 async function loadFeaturedProduct() {
     try {
-        // Fetch one featured product
         const products = await apiRequest('/api/products/?limit=1'); 
         if (products && products.length > 0) {
             const p = products[0];
