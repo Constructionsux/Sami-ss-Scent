@@ -149,9 +149,14 @@ async def calculate_shipping(state: str,db: AsyncSession = Depends(get_db), city
         return float(zone.base_fee)
     return 3500.0  # Default shipping fee
 
-async def create_order( user: User, request: OrderCreate,db: AsyncSession = Depends(get_db), guest_token: str = None):
+    
+async def create_order(db: AsyncSession, user: Optional[User], request: OrderCreate, guest_token: Optional[str] = None):
     # Get cart
-    cart = await get_or_create_cart(db, user.id if user else None, guest_token)
+    cart = await get_or_create_cart(
+        db=db, 
+        user_id=user.id if user else None, 
+        guest_token=guest_token
+    )
     
     if not cart.items:
         raise HTTPException(status_code=400, detail="Cart is empty")
