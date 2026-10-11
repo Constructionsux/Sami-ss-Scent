@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Sami's Scent</title>
+    <link rel="icon" type="image/png" href="/static/images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/shop.css">
+    <link rel="stylesheet" href="/static/css/checkout-page.css">
+</head>
+<body>
+
+    <!-- Simple Top Nav -->
+    <nav class="desktop-nav">
+        <div class="desktop-nav-container">
+            <a href="/shop-home" class="desktop-logo">
+                <img src="/static/images/logo.png" alt="Sami's Scent">
+            </a>
+            <div class="desktop-links">
+                <a href="/cart">Return to Cart</a>
+            </div>
+        </div>
+    </nav>
+    <div class="mobile-nav-top">
+        <div class="mobile-nav-left">
+            <a href="/cart" style="color: var(--color-text-primary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-arrow-left"></i> Back to Cart
+            </a>
+        </div>
+    </div>
+
+    <!-- Checkout Section -->
+    <section class="checkout-section">
+        <div class="container">
+            <h1 class="page-title">Secure Checkout</h1>
+            
+            <div class="checkout-layout">
+                
+                <!-- LEFT: Forms -->
+                <div class="checkout-forms">
+                    
+                    <!-- Step 1: Contact & Delivery -->
+                    <div class="form-step" id="step1">
+                        <h2 class="step-title">1. Contact & Delivery Details</h2>
+                        
+                        <form id="checkoutForm">
+                            <!-- Contact Info -->
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="custName" required placeholder="John Doe">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="custEmail" required placeholder="you@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" id="custPhone" required placeholder="08012345678">
+                                </div>
+                            </div>
+
+                            <!-- Delivery Method Toggle -->
+                            <div class="delivery-toggle">
+                                <label class="toggle-option">
+                                    <input type="radio" name="deliveryMethod" value="doorstep" checked onchange="toggleDeliveryMethod()">
+                                    <span class="toggle-label"><i class="fas fa-home"></i> Doorstep Delivery</span>
+                                </label>
+                                <label class="toggle-option">
+                                    <input type="radio" name="deliveryMethod" value="park" onchange="toggleDeliveryMethod()">
+                                    <span class="toggle-label"><i class="fas fa-bus"></i> Nearest Park / Bus Stop</span>
+                                </label>
+                            </div>
+
+                            <!-- Doorstep Fields -->
+                            <div id="doorstepFields">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>State</label>
+                                        <select id="doorstepState" onchange="calculateShipping()">
+                                            <option value="">Select State</option>
+                                            <option value="Lagos">Lagos</option>
+                                            <option value="Abuja">Abuja (FCT)</option>
+                                            <option value="Rivers">Rivers</option>
+                                            <option value="Oyo">Oyo</option>
+                                            <option value="Delta">Delta</option>
+                                            <option value="Edo">Edo</option>
+                                            <option value="Anambra">Anambra</option>
+                                            <option value="Enugu">Enugu</option>
+                                            <option value="Imo">Imo</option>
+                                            <option value="Kano">Kano</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>City / Area</label>
+                                        <input type="text" id="doorstepCity" placeholder="e.g., Ikeja">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Full Street Address</label>
+                                    <textarea id="doorstepAddress" rows="3" placeholder="House number, street name, landmark..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Park Fields (Hidden by default) -->
+                            <div id="parkFields" style="display: none;">
+                                <div class="form-group">
+                                    <label>State</label>
+                                    <select id="parkState" onchange="loadParks()">
+                                        <option value="">Select State</option>
+                                        <option value="Lagos">Lagos</option>
+                                        <option value="Abuja">Abuja (FCT)</option>
+                                        <option value="Rivers">Rivers</option>
+                                        <option value="Oyo">Oyo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Select Nearest Park</label>
+                                    <select id="parkSelect" onchange="calculateShipping()">
+                                        <option value="">Select a park to see price</option>
+                                    </select>
+                                    <p id="parkLoading" style="display:none; font-size:0.85rem; color:var(--color-text-muted); margin-top:0.5rem;">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading parks...
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary btn-block" onclick="goToStep2()">
+                                Review Order & Payment
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Step 2: Payment & Receipt (Hidden initially) -->
+                    <div class="form-step" id="step2" style="display: none;">
+                        <h2 class="step-title">2. Payment & Confirmation</h2>
+                        
+                        <!-- Bank Details -->
+                        <div class="bank-details-box">
+                            <h3><i class="fas fa-university"></i> Bank Transfer Details</h3>
+                            <p>Please transfer the total amount to the account below:</p>
+                            <div class="bank-info">
+                                <div class="bank-row">
+                                    <span>Bank Name:</span>
+                                    <strong id="bankName">Loading...</strong>
+                                </div>
+                                <div class="bank-row">
+                                    <span>Account Name:</span>
+                                    <strong id="accountName">Loading...</strong>
+                                </div>
+                                <div class="bank-row">
+                                    <span>Account Number:</span>
+                                    <strong id="accountNumber" class="copy-number" onclick="copyToClipboard('accountNumber')">Loading... <i class="far fa-copy"></i></strong>
+                                </div>
+                                <div class="bank-row">
+                                    <span>Amount to Pay:</span>
+                                    <strong id="payAmount" style="color: var(--color-accent); font-size: 1.2rem;">₦0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Receipt Upload -->
+                        <div class="receipt-upload-box">
+                            <h3>Upload Payment Receipt</h3>
+                            <p>After making the transfer, upload a screenshot or photo of your receipt for verification.</p>
+                            <form id="receiptForm">
+                                <div class="file-input-wrapper">
+                                    <label for="receiptFile" class="file-label">
+                                        <i class="fas fa-cloud-upload-alt"></i> Choose File
+                                    </label>
+                                    <input type="file" id="receiptFile" accept="image/*,.pdf" required onchange="updateFileName(this)">
+                                    <span id="fileNameDisplay">No file chosen</span>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block" id="submitReceiptBtn">
+                                    Submit Receipt & Complete Order
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Success (Hidden initially) -->
+                    <div class="form-step" id="step3" style="display: none; text-align: center; padding: 3rem 1rem;">
+                        <div style="font-size: 4rem; color: var(--color-success, #2d6a4f); margin-bottom: 1rem;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h2 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">Order Placed Successfully!</h2>
+                        <p style="color: var(--color-text-secondary); margin-bottom: 2rem; line-height: 1.6;">
+                            Thank you for shopping with Sami's Scent. Your payment receipt has been received and is currently under review. 
+                            We will send a confirmation email to <strong id="successEmail"></strong> once verified.
+                        </p>
+                        <a href="/shop-home" class="btn btn-primary">Continue Shopping</a>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT: Order Summary -->
+                <div class="order-summary-sidebar">
+                    <h3>Order Summary</h3>
+                    <div id="summaryItems">
+                        <!-- Items injected by JS -->
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="summarySubtotal">0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping Fee</span>
+                        <span id="summaryShipping">₦0.00</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row total-row">
+                        <span>Total</span>
+                        <span id="summaryTotal">₦0.00</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="shop-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>SAMI'S SCENT &copy; 2026. ALL RIGHTS RESERVED.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/cart.js"></script>
+    <script src="/static/js/checkout-page.js"></script>
+</body>
+</html>
