@@ -1,21 +1,53 @@
-import uuid
 import os
+import uuid
+import asyncio
+import resend
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, text 
+from sqlalchemy import select, delete, text
 from sqlalchemy.orm import selectinload
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from fastapi import Header, HTTPException, Depends
-from app.models import User, Product, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, DeliveryZone
-from app.schemas import UserCreate, UserLogin, OrderCreate
-from app.database import get_db
-import asyncio
-import resend
+from fastapi import HTTPException, Header, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from app.models import (
+    User, Product, Cart, CartItem, Wishlist, WishlistItem, 
+    Order, OrderItem, DeliveryZone
+)
+from app.schemas import OrderCreate
+from app.database import get_db  # Ensure this is imported
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ADMIN_API_SECRET = os.getenv("ADMIN_API_SECRET", "super-secret-admin-key")
+
+# Use HTTPBearer to correctly read the "Authorization: Bearer <token>" header
+security = HTTPBearer(auto_error=False)
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db)
+):
+    # If no token is provided, return None (allows guest users)
+    if not credentials:
+        return None
+    
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 # Auth functions
 def get_password_hash(password: str) -> str:
@@ -30,20 +62,7 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(token: str, db: AsyncSession = Depends(get_db)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
-        user = result.scalar_one_or_none()
-        if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
-        return user
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+
 
 # Cart functions
 async def get_or_create_cart(user_id: uuid.UUID = None, guest_token: str = None,db: AsyncSession = Depends(get_db)):
@@ -176,11 +195,10 @@ async def create_order( user: User, request: OrderCreate,db: AsyncSession = Depe
 
 
 async def verify_admin_token(x_admin_token: str = Header(None)):
-    """Verify admin API secret token"""
-    secret = os.getenv("ADMIN_API_SECRET", "super-secret-admin-key")
-    if x_admin_token != secret:
+    if x_admin_token != ADMIN_API_SECRET:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return True
+
 
 
 
