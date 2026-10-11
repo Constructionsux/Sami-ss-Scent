@@ -1,9 +1,16 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Enum as SQLEnum, Numeric, Boolean, Integer, Text, Table
+from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Boolean, Integer, Text, Table
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+# 1. Define the Many-to-Many Association Table FIRST
+product_categories = Table(
+    "product_categories", Base.metadata,
+    Column("product_id", UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), primary_key=True),
+    Column("category_id", UUID(as_uuid=True), ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True)
+)
 
 class User(Base):
     __tablename__ = "users"
@@ -38,19 +45,15 @@ class Category(Base):
     image_url = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    products = relationship("Product", secondary="product_categories", back_populates="categories")
-
-product_categories = Table(
-    "product_categories", Base.metadata,
-    Column("product_id", UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), primary_key=True),
-    Column("category_id", UUID(as_uuid=True), ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True)
-)
+    
+    # Corrected: back_populates matches the Product model exactly
+    products = relationship("Product", secondary=product_categories, back_populates="categories")
 
 class Product(Base):
     __tablename__ = "products"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     brand_id = Column(UUID(as_uuid=True), ForeignKey("brands.id"), nullable=False)
-    category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True)
+    # Note: category_id column is removed because it's now a proper many-to-many relationship
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, nullable=False)
     description = Column(Text, nullable=True)
@@ -66,7 +69,8 @@ class Product(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     brand = relationship("Brand", back_populates="products")
-    category = relationship("Category", back_populates="products")
+    # Corrected: plural 'categories' with secondary table
+    categories = relationship("Category", secondary=product_categories, back_populates="products")
     cart_items = relationship("CartItem", back_populates="product")
     order_items = relationship("OrderItem", back_populates="product")
 
