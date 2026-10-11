@@ -59,7 +59,7 @@ async def get_cart(
 
 @router.post("/items")
 async def add_item(
-    item_data: CartItemAdd,
+    item_data: CartItemAdd,  
     user: Optional[User] = Depends(get_current_user),
     x_guest_token: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
