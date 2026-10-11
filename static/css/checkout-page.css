@@ -1,0 +1,284 @@
+/* ============================================
+   SAMI'S SCENT - CHECKOUT PAGE STYLES
+   ============================================ */
+
+.checkout-section {
+    padding: 3rem 1.5rem;
+    min-height: 80vh;
+}
+
+.page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: var(--color-text-primary, #1a1a1a);
+}
+
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+    .checkout-layout {
+        grid-template-columns: 1.5fr 1fr;
+        gap: 4rem;
+    }
+}
+
+/* --- Forms --- */
+.step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-primary, #1a1a1a);
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+    padding-bottom: 0.75rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-primary, #1a1a1a);
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 0.85rem;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-sm, 4px);
+    font-size: 0.95rem;
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #1a1a1a);
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-accent, #8c735a);
+}
+
+/* Delivery Toggle */
+.delivery-toggle {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.toggle-option {
+    flex: 1;
+    position: relative;
+}
+
+.toggle-option input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    color: var(--color-text-secondary, #666);
+}
+
+.toggle-option input:checked + .toggle-label {
+    border-color: var(--color-accent, #8c735a);
+    background: var(--color-accent-light, #f4f1ed);
+    color: var(--color-accent, #8c735a);
+}
+
+/* Bank Details Box */
+.bank-details-box {
+    background: var(--color-accent-light, #f4f1ed);
+    border: 1px solid var(--color-accent, #8c735a);
+    border-radius: var(--radius-md, 8px);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.bank-details-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-accent, #8c735a);
+}
+
+.bank-details-box p {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary, #666);
+    margin-bottom: 1rem;
+}
+
+.bank-info {
+    background: var(--color-surface, #fff);
+    padding: 1rem;
+    border-radius: var(--radius-sm, 4px);
+}
+
+.bank-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+    font-size: 0.95rem;
+}
+
+.bank-row:last-child { border-bottom: none; }
+
+.copy-number {
+    cursor: pointer;
+    color: var(--color-accent, #8c735a);
+}
+
+.copy-number:hover { text-decoration: underline; }
+
+/* Receipt Upload */
+.receipt-upload-box {
+    background: var(--color-bg, #fafafa);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-md, 8px);
+    padding: 1.5rem;
+}
+
+.receipt-upload-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.receipt-upload-box p {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary, #666);
+    margin-bottom: 1.5rem;
+}
+
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.file-input-wrapper input[type="file"] {
+    display: none;
+}
+
+.file-label {
+    background: var(--color-text-primary, #1a1a1a);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.file-label:hover { background: var(--color-accent, #8c735a); }
+
+#fileNameDisplay {
+    font-size: 0.9rem;
+    color: var(--color-text-muted, #999);
+}
+
+/* Order Summary Sidebar */
+.order-summary-sidebar {
+    background: var(--color-bg, #fafafa);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-md, 8px);
+    padding: 2rem;
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+}
+
+.order-summary-sidebar h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+}
+
+.summary-item img {
+    width: 60px;
+    height: 75px;
+    object-fit: cover;
+    border-radius: var(--radius-sm, 4px);
+}
+
+.summary-item-details {
+    flex: 1;
+}
+
+.summary-item-details h4 {
+    font-size: 0.95rem;
+    margin: 0 0 0.25rem 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+}
+
+.summary-item-details p {
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #999);
+    margin: 0;
+}
+
+.summary-divider {
+    height: 1px;
+    background: var(--color-border, #e5e5e5);
+    margin: 1rem 0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--color-text-secondary, #666);
+}
+
+.total-row {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-primary, #1a1a1a);
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
