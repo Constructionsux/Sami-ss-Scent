@@ -1,0 +1,191 @@
+/* ============================================
+   SAMI'S SCENT - DEDICATED LOGIN PAGE STYLES
+   ============================================ */
+
+.login-page-body {
+    background-color: var(--color-bg, #fafafa);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure the main content pushes the footer down */
+.login-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+}
+
+.login-card {
+    background: var(--color-surface, #ffffff);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 12px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.login-header {
+    margin-bottom: 2rem;
+}
+
+.login-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem;
+    color: var(--color-text-primary, #1a1a1a);
+    margin: 0 0 0.5rem 0;
+}
+
+.login-header p {
+    color: var(--color-text-secondary, #666666);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Form Styling */
+.login-form {
+    text-align: left;
+}
+
+.login-form .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.login-form .form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text-primary, #1a1a1a);
+    margin-bottom: 0.5rem;
+}
+
+.login-form .form-group input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 6px;
+    font-size: 1rem;
+    color: var(--color-text-primary, #1a1a1a);
+    background: var(--color-surface, #ffffff);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box; /* Prevents padding from breaking width */
+}
+
+.login-form .form-group input:focus {
+    outline: none;
+    border-color: var(--color-accent, #8c735a);
+    box-shadow: 0 0 0 3px rgba(140, 115, 90, 0.1);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--color-accent, #8c735a);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.login-btn:hover {
+    background: var(--color-accent-hover, #735e48);
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+.login-btn:disabled {
+    background: var(--color-text-muted, #999999);
+    cursor: not-allowed;
+}
+
+/* State Messages (Hidden by default) */
+.state-message {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.state-message.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.state-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.state-icon.success { color: var(--color-success, #2d6a4f); }
+.state-icon.error { color: var(--color-error, #9b2226); }
+.state-icon.loading { color: var(--color-accent, #8c735a); }
+
+.state-message h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--color-text-primary, #1a1a1a);
+    margin: 0 0 1rem 0;
+}
+
+.state-message p {
+    color: var(--color-text-secondary, #666666);
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+}
+
+.secondary-btn {
+    width: 100%;
+    padding: 0.85rem;
+    background: transparent;
+    color: var(--color-text-primary, #1a1a1a);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    background: var(--color-bg, #fafafa);
+    border-color: var(--color-text-muted, #999999);
+}
+
+/* Simple Nav Overrides for Login Page */
+.login-nav {
+    background: var(--color-surface, #ffffff);
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+    padding: 1rem 1.5rem;
+}
+
+.login-nav a {
+    color: var(--color-text-primary, #1a1a1a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.login-nav a:hover {
+    color: var(--color-accent, #8c735a);
+}
