@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Boolean, Integer, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, Enum as SQLEnum, Numeric, Boolean, Integer, Text, Table
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -28,7 +28,6 @@ class Brand(Base):
     logo_url = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
     products = relationship("Product", back_populates="brand")
 
 class Category(Base):
@@ -39,8 +38,13 @@ class Category(Base):
     image_url = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
-    products = relationship("Product", back_populates="category")
+    products = relationship("Product", secondary="product_categories", back_populates="categories")
+
+product_categories = Table(
+    "product_categories", Base.metadata,
+    Column("product_id", UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), primary_key=True),
+    Column("category_id", UUID(as_uuid=True), ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True)
+)
 
 class Product(Base):
     __tablename__ = "products"
@@ -63,6 +67,8 @@ class Product(Base):
     
     brand = relationship("Brand", back_populates="products")
     category = relationship("Category", back_populates="products")
+    cart_items = relationship("CartItem", back_populates="product")
+    order_items = relationship("OrderItem", back_populates="product")
 
 class Cart(Base):
     __tablename__ = "carts"
@@ -71,7 +77,6 @@ class Cart(Base):
     guest_token = Column(String, nullable=True, unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
     user = relationship("User", back_populates="cart")
     items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
 
@@ -82,16 +87,14 @@ class CartItem(Base):
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
     cart = relationship("Cart", back_populates="items")
-    product = relationship("Product")
+    product = relationship("Product", back_populates="cart_items")
 
 class Wishlist(Base):
     __tablename__ = "wishlists"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
     user = relationship("User", back_populates="wishlist")
     items = relationship("WishlistItem", back_populates="wishlist", cascade="all, delete-orphan")
 
@@ -101,7 +104,6 @@ class WishlistItem(Base):
     wishlist_id = Column(UUID(as_uuid=True), ForeignKey("wishlists.id"), nullable=False)
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
     wishlist = relationship("Wishlist", back_populates="items")
     product = relationship("Product")
 
@@ -125,9 +127,9 @@ class Order(Base):
     payment_receipt_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    payment = relationship("Payment", back_populates="order", uselist=False)
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -139,9 +141,30 @@ class OrderItem(Base):
     quantity = Column(Integer, nullable=False)
     total_price = Column(Numeric(15, 2), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
     order = relationship("Order", back_populates="items")
-    product = relationship("Product")
+    product = relationship("Product", back_populates="order_items")
+
+class Payment(Base):
+    __tablename__ = "payments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), unique=True, nullable=False)
+    payment_reference = Column(String, unique=True, nullable=False)
+    amount = Column(Numeric(15, 2), nullable=False)
+    status = Column(String, default="pending")
+    rejection_reason = Column(String, nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    order = relationship("Order", back_populates="payment")
+    receipts = relationship("PaymentReceipt", back_populates="payment", cascade="all, delete-orphan")
+
+class PaymentReceipt(Base):
+    __tablename__ = "payment_receipts"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    payment_id = Column(UUID(as_uuid=True), ForeignKey("payments.id"), nullable=False)
+    file_path = Column(String, nullable=False)
+    original_filename = Column(String, nullable=False)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    payment = relationship("Payment", back_populates="receipts")
 
 class DeliveryZone(Base):
     __tablename__ = "delivery_zones"
@@ -151,7 +174,6 @@ class DeliveryZone(Base):
     base_fee = Column(Numeric(15, 2), nullable=False)
     per_km_fee = Column(Numeric(15, 2), default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
-
 
 class DeliveryPark(Base):
     __tablename__ = "delivery_parks"
