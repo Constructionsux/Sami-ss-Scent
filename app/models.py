@@ -151,3 +151,14 @@ class DeliveryZone(Base):
     base_fee = Column(Numeric(15, 2), nullable=False)
     per_km_fee = Column(Numeric(15, 2), default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DeliveryPark(Base):
+    __tablename__ = "delivery_parks"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    state = Column(String, nullable=False, index=True)
+    city = Column(String, nullable=False)
+    park_name = Column(String, nullable=False)
+    fee = Column(Numeric(15, 2), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
