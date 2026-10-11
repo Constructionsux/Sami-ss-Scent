@@ -5,99 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Sami's Scent</title>
     <link rel="icon" type="image/png" href="/static/images/logo.png">
+    
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Base variables (for colors) + Dedicated Login Styles -->
     <link rel="stylesheet" href="/static/css/styles.css">
-    <link rel="stylesheet" href="/static/css/shop.css">
+    <link rel="stylesheet" href="/static/css/login-page.css">
 </head>
-<body>
-    <nav class="desktop-nav">
-        <div class="desktop-nav-container">
-            <a href="/shop-home" class="desktop-logo">
-                <img src="/static/images/logo.png" alt="Sami's Scent">
-            </a>
-            <div class="desktop-links">
-                <a href="/shop-home">Return to Shop</a>
-            </div>
-        </div>
+<body class="login-page-body">
+
+    <!-- Simple Top Nav -->
+    <nav class="login-nav">
+        <a href="/shop-home">
+            <i class="fas fa-arrow-left"></i> Return to Shop
+        </a>
     </nav>
 
-    <div class="mobile-nav-top">
-        <div class="mobile-nav-left">
-            <a href="/shop-home">
-                <img src="/static/images/logo.png" alt="Sami's Scent" class="mobile-logo">
-            </a>
-        </div>
-    </div>
-
-    <section class="section" style="padding-top: 4rem; min-height: 80vh; display: flex; align-items: center; justify-content: center;">
-        <div class="container" style="max-width: 450px; width: 100%; padding: 0 1.5rem;">
-            <div class="checkout-summary reveal" style="padding: 2.5rem; text-align: center; border: 1px solid var(--color-border, #e5e5e5); border-radius: 8px;">
-                
-                <div style="margin-bottom: 2rem;">
-                    <h2 class="section-title" style="margin-bottom: 0.5rem;">Welcome Back</h2>
-                    <p style="color: var(--color-text-secondary); font-size: 0.95rem;">
-                        Enter your email to receive a secure, passwordless login link.
-                    </p>
-                </div>
-
-                <!-- STATE 1: Email Input Form -->
-                <form id="loginForm" style="text-align: left;">
-                    <div class="form-group">
-                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Email Address</label>
-                        <input type="email" id="emailInput" required placeholder="you@example.com" autocomplete="email" style="width: 100%; padding: 0.85rem; border: 1px solid var(--color-border, #e5e5e5); border-radius: 4px; font-size: 0.95rem;">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 1rem; width: 100%; padding: 0.85rem; background: var(--color-accent, #8c735a); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
-                        <span class="btn-text">Send Login Link</span>
-                        <span class="btn-loader" hidden><i class="fas fa-spinner fa-spin"></i> Sending...</span>
-                    </button>
-                </form>
-
-                <!-- STATE 2: Success Message -->
-                <div id="successMessage" style="display: none;">
-                    <div style="font-size: 3.5rem; color: var(--color-success, #2d6a4f); margin-bottom: 1rem;">
-                        <i class="fas fa-envelope-open-text"></i>
-                    </div>
-                    <h3 style="margin-bottom: 1rem; font-family: 'Playfair Display', serif;">Check Your Email</h3>
-                    <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
-                        We've sent a secure login link to <strong id="sentEmail" style="color: var(--color-text-primary);"></strong>. 
-                        <br>Click the link in your inbox to access your account instantly.
-                    </p>
-                    <button onclick="window.location.href='/shop-home'" class="btn btn-secondary btn-block" style="width: 100%; padding: 0.85rem; border: 1px solid var(--color-border); border-radius: 4px; background: transparent; cursor: pointer;">Return to Shop</button>
-                </div>
-
-                <!-- STATE 3: Verifying Token -->
-                <div id="verifyingMessage" style="display: none;">
-                    <div style="font-size: 2.5rem; color: var(--color-accent, #8c735a); margin-bottom: 1rem;">
-                        <i class="fas fa-circle-notch fa-spin"></i>
-                    </div>
-                    <h3 style="font-family: 'Playfair Display', serif;">Securing your session...</h3>
-                    <p style="color: var(--color-text-secondary);">Please wait a moment.</p>
-                </div>
-
+    <!-- Main Content -->
+    <main class="login-main">
+        <div class="login-card">
+            
+            <div class="login-header">
+                <h2>Welcome Back</h2>
+                <p>Enter your email to receive a secure, passwordless login link.</p>
             </div>
-        </div>
-    </section>
 
-    <footer class="shop-footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>SAMI'S SCENT &copy; 2026. ALL RIGHTS RESERVED.</p>
+            <!-- STATE 1: Email Input Form -->
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="emailInput">Email Address</label>
+                    <input type="email" id="emailInput" required placeholder="you@example.com" autocomplete="email">
+                </div>
+                <button type="submit" class="login-btn" id="submitBtn">
+                    <span class="btn-text">Send Login Link</span>
+                    <span class="btn-loader" hidden><i class="fas fa-spinner fa-spin"></i> Sending...</span>
+                </button>
+            </form>
+
+            <!-- STATE 2: Success Message -->
+            <div id="successMessage" class="state-message">
+                <div class="state-icon success">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <h3>Check Your Email</h3>
+                <p>
+                    We've sent a secure login link to <strong id="sentEmail" style="color: var(--color-text-primary);"></strong>. 
+                    <br>Click the link in your inbox to access your account instantly.
+                </p>
+                <button onclick="window.location.href='/shop-home'" class="secondary-btn">Return to Shop</button>
             </div>
+
+            <!-- STATE 3: Verifying Token -->
+            <div id="verifyingMessage" class="state-message">
+                <div class="state-icon loading">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                </div>
+                <h3>Securing your session...</h3>
+                <p>Please wait a moment while we verify your link.</p>
+            </div>
+
         </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="shop-footer" style="border-top: 1px solid var(--color-border, #e5e5e5); padding: 1.5rem; text-align: center;">
+        <p style="font-size: 0.8rem; color: var(--color-text-muted, #999999); margin: 0;">
+            SAMI'S SCENT &copy; 2026. ALL RIGHTS RESERVED.
+        </p>
     </footer>
 
+    <!-- Scripts -->
     <script src="/static/js/api.js"></script>
     <script>
+        // 1. Check if URL has a token (e.g., /login?token=xyz from the email link)
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
 
         if (token) {
+            // Hide form, show verifying state
             document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('verifyingMessage').style.display = 'block';
+            document.getElementById('verifyingMessage').classList.add('active');
+            
+            // Automatically verify the token
             verifyToken(token);
         }
 
+        // 2. Token Verification Logic
         async function verifyToken(token) {
             try {
                 const response = await apiRequest('/api/auth/verify-login', {
@@ -106,31 +101,37 @@
                 });
 
                 if (response.access_token) {
+                    // Save the long-lived session token
                     localStorage.setItem('access_token', response.access_token);
+                    
+                    // Show success briefly then redirect
                     document.getElementById('verifyingMessage').innerHTML = `
-                        <div style="font-size: 3.5rem; color: var(--color-success, #2d6a4f); margin-bottom: 1rem;">
+                        <div class="state-icon success">
                             <i class="fas fa-check-circle"></i>
                         </div>
-                        <h3 style="font-family: 'Playfair Display', serif;">Login Successful!</h3>
-                        <p style="color: var(--color-text-secondary);">Redirecting you to the shop...</p>
+                        <h3>Login Successful!</h3>
+                        <p>Redirecting you to the shop...</p>
                     `;
+                    
                     setTimeout(() => {
+                        // Clean URL (remove ?token=...)
                         window.history.replaceState({}, document.title, window.location.pathname);
                         window.location.href = '/shop-home';
                     }, 1500);
                 }
             } catch (error) {
                 document.getElementById('verifyingMessage').innerHTML = `
-                    <div style="font-size: 3.5rem; color: var(--color-error, #9b2226); margin-bottom: 1rem;">
+                    <div class="state-icon error">
                         <i class="fas fa-exclamation-circle"></i>
                     </div>
-                    <h3 style="font-family: 'Playfair Display', serif;">Login Failed</h3>
-                    <p style="color: var(--color-error, #9b2226); margin-bottom: 1.5rem;">${error.message || 'The link is invalid or has expired.'}</p>
-                    <button onclick="window.location.href='/login'" class="btn btn-primary" style="padding: 0.85rem; background: var(--color-accent, #8c735a); color: white; border: none; border-radius: 4px; cursor: pointer;">Request New Link</button>
+                    <h3>Login Failed</h3>
+                    <p style="color: var(--color-error, #9b2226);">${error.message || 'The link is invalid or has expired.'}</p>
+                    <button onclick="window.location.href='/login'" class="login-btn">Request New Link</button>
                 `;
             }
         }
 
+        // 3. Handle Email Form Submission
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('emailInput').value.trim();
@@ -138,6 +139,7 @@
             const btnText = btn.querySelector('.btn-text');
             const btnLoader = btn.querySelector('.btn-loader');
 
+            // Loading state
             btn.disabled = true;
             btnText.hidden = true;
             btnLoader.hidden = false;
@@ -147,9 +149,12 @@
                     method: 'POST',
                     body: JSON.stringify({ email: email })
                 });
+
+                // Switch to success state
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('sentEmail').textContent = email;
-                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('successMessage').classList.add('active');
+
             } catch (error) {
                 alert(error.message || 'Failed to send login link. Please try again.');
                 btn.disabled = false;
