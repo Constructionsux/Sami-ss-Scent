@@ -1,19 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import Optional
-import os
-import uuid
-import shutil
+import os, uuid, shutil
 from datetime import datetime
+
 from app.database import get_db
-from app.models import Order, User
-from app.schemas import OrderCreate, OrderResponse
-from app.services import get_current_user, create_order
+from app.models import Order, OrderItem, Payment, PaymentReceipt, DeliveryPark, CartItem, Product
+from app.schemas import OrderCreate
+from app.services import get_current_user, create_order, User
+
 
 router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
+
+# --- 1. Fetch Delivery Parks ---
+@router.get("/parks")
+async def get_delivery_parks(
+    state: str = Query(..., description="State to filter parks"),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(DeliveryPark).where(DeliveryPark.state.ilike(f"%{state}%"), DeliveryPark.is_active == True)
+    )
+    parks = result.scalars().all()
+    return [
+        {
+            "id": str(p.id),
+            "city": p.city,
+            "park_name": p.park_name,
+            "fee": float(p.fee)
+        } for p in parks
+    ]
+
+# --- 2. Create Order ---
 @router.post("/")
 async def place_order(
     order_data: OrderCreate,
@@ -21,17 +42,56 @@ async def place_order(
     x_guest_token: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
-    # Create order
     order = await create_order(db, user, order_data, x_guest_token)
-    
-    # TODO: Send email notification to CEO
-    # TODO: Send confirmation email to customer
     
     return {
         "order_number": order.order_number,
         "total_amount": float(order.total_amount),
-        "message": "Order placed successfully"
+        "shipping_fee": float(order.shipping_fee),
+        "bank_details": {
+            "bank_name": os.getenv("BANK_NAME", "Providus Bank"),
+            "account_name": os.getenv("BANK_ACCOUNT_NAME", "Sami's Scent Ltd"),
+            "account_number": os.getenv("BANK_ACCOUNT_NUMBER", "1234567890")
+        }
     }
+
+# --- 3. Upload Payment Receipt ---
+@router.post("/{order_number}/upload-receipt")
+async def upload_payment_receipt(
+    order_number: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Order).where(Order.order_number == order_number))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Validate file type
+    if file.content_type not in ["image/jpeg", "image/png", "image/jpg", "application/pdf"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image or PDF.")
+    
+    # Save file securely
+    upload_dir = "static/uploads/receipts"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_ext = os.path.splitext(file.filename)[1]
+    filename = f"{order_number}_{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join(upload_dir, filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Update order status
+    order.payment_receipt_url = f"/static/uploads/receipts/{filename}"
+    order.payment_status = "submitted"
+    order.order_status = "payment_under_review"
+    order.updated_at = datetime.utcnow()
+    
+    await db.commit()
+    
+    return {"message": "Receipt uploaded successfully. We will verify your payment shortly."}
+
+
 
 @router.get("/")
 async def get_orders(
@@ -98,37 +158,3 @@ async def get_order(
             for item in order.items
         ]
     }
-
-@router.post("/{order_number}/upload-receipt")
-async def upload_payment_receipt(
-    order_number: str,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(select(Order).where(Order.order_number == order_number))
-    order = result.scalar_one_or_none()
-    
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    # Save file
-    upload_dir = "static/uploads/receipts"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    file_ext = os.path.splitext(file.filename)[1]
-    filename = f"{order_number}_{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join(upload_dir, filename)
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Update order
-    order.payment_receipt_url = f"/static/uploads/receipts/{filename}"
-    order.payment_status = "submitted"
-    order.updated_at = datetime.utcnow()
-    
-    await db.commit()
-    
-    # TODO: Send notification to CEO
-    
-    return {"message": "Receipt uploaded successfully", "receipt_url": order.payment_receipt_url}
