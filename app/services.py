@@ -3,6 +3,8 @@ import uuid
 import asyncio
 import resend
 from datetime import datetime, timedelta
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, text
 from sqlalchemy.orm import selectinload
@@ -10,13 +12,12 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import HTTPException, Header, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+
 from app.models import (
     User, Product, Cart, CartItem, Wishlist, WishlistItem, 
     Order, OrderItem, DeliveryZone
 )
 from app.schemas import OrderCreate
-from app.database import get_db  # Ensure this is imported
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
@@ -26,7 +27,51 @@ ADMIN_API_SECRET = os.getenv("ADMIN_API_SECRET", "super-secret-admin-key")
 # Use HTTPBearer to correctly read the "Authorization: Bearer <token>" header
 security = HTTPBearer(auto_error=False)
 
+# ============================================================
+# 1. Authentication Services
+# ============================================================
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db) # Depends is OKAY here because it's used by route handlers
+):
+    if not credentials:
+        return None
+    
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
+async def verify_admin_token(x_admin_token: str = Header(None)):
+    if x_admin_token != ADMIN_API_SECRET:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return True
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=60)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+# ============================================================
+# 2. E-Commerce Services (NO Depends allowed here!)
+# ============================================================
 async def get_or_create_cart(
     db: AsyncSession, 
     user_id: Optional[uuid.UUID] = None, 
@@ -52,69 +97,7 @@ async def get_or_create_cart(
             await db.refresh(cart)
     return cart
 
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db)
-):
-    # If no token is provided, return None (allows guest users)
-    if not credentials:
-        return None
-    
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        result = await db.execute(select(User).where(User.id == uuid.UUID(user_id)))
-        user = result.scalar_one_or_none()
-        if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
-        return user
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-# Auth functions
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=60)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-
-# Cart functions
-async def get_or_create_cart(user_id: uuid.UUID = None, guest_token: str = None,db: AsyncSession = Depends(get_db)):
-    if user_id:
-        result = await db.execute(select(Cart).where(Cart.user_id == user_id))
-        cart = result.scalar_one_or_none()
-        if not cart:
-            cart = Cart(user_id=user_id)
-            db.add(cart)
-            await db.commit()
-            await db.refresh(cart)
-    else:
-        if not guest_token:
-            guest_token = str(uuid.uuid4())
-        result = await db.execute(select(Cart).where(Cart.guest_token == guest_token))
-        cart = result.scalar_one_or_none()
-        if not cart:
-            cart = Cart(guest_token=guest_token)
-            db.add(cart)
-            await db.commit()
-            await db.refresh(cart)
-    return cart
-
-async def add_to_cart(cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int,db: AsyncSession = Depends(get_db)):
-    # Check product exists and has stock
+async def add_to_cart(db: AsyncSession, cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int):
     result = await db.execute(select(Product).where(Product.id == product_id, Product.is_active == True))
     product = result.scalar_one_or_none()
     if not product:
@@ -122,7 +105,6 @@ async def add_to_cart(cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int,d
     if product.stock_quantity < quantity:
         raise HTTPException(status_code=400, detail="Insufficient stock")
     
-    # Check if item already in cart
     result = await db.execute(
         select(CartItem).where(CartItem.cart_id == cart_id, CartItem.product_id == product_id)
     )
@@ -137,31 +119,20 @@ async def add_to_cart(cart_id: uuid.UUID, product_id: uuid.UUID, quantity: int,d
     await db.commit()
     return cart_item
 
-# Order functions
-async def calculate_shipping(state: str,db: AsyncSession = Depends(get_db), city: str = None) -> float:
-    """Calculate shipping fee based on state/city"""
+async def calculate_shipping(db: AsyncSession, state: str) -> float:
     result = await db.execute(
         select(DeliveryZone).where(DeliveryZone.state.ilike(f"%{state}%"))
     )
     zone = result.scalar_one_or_none()
-    
-    if zone:
-        return float(zone.base_fee)
-    return 3500.0  # Default shipping fee
+    return float(zone.base_fee) if zone else 3500.0
 
-    
 async def create_order(db: AsyncSession, user: Optional[User], request: OrderCreate, guest_token: Optional[str] = None):
-    # Get cart
-    cart = await get_or_create_cart(
-        db=db, 
-        user_id=user.id if user else None, 
-        guest_token=guest_token
-    )
+    # Notice: We pass db=db explicitly, NO Depends here
+    cart = await get_or_create_cart(db=db, user_id=user.id if user else None, guest_token=guest_token)
     
     if not cart.items:
         raise HTTPException(status_code=400, detail="Cart is empty")
     
-    # Calculate totals
     subtotal = 0.0
     order_items = []
     
@@ -171,7 +142,6 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
         
         if not product or not product.is_active:
             raise HTTPException(status_code=400, detail=f"Product {product.name if product else 'Unknown'} is no longer available")
-        
         if product.stock_quantity < cart_item.quantity:
             raise HTTPException(status_code=400, detail=f"Insufficient stock for {product.name}")
         
@@ -186,15 +156,12 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
             total_price=line_total
         ))
         
-        # Deduct stock
         product.stock_quantity -= cart_item.quantity
         product.sales_count += cart_item.quantity
     
-    # Calculate shipping
-    shipping_fee = await calculate_shipping(db, request.state or "", request.city)
+    shipping_fee = await calculate_shipping(db, request.state or "")
     total_amount = subtotal + shipping_fee
     
-    # Create order
     order_number = f"SS-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
     
     order = Order(
@@ -216,92 +183,47 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
     )
     db.add(order)
     
-    # Clear cart
     await db.execute(delete(CartItem).where(CartItem.cart_id == cart.id))
-    
     await db.commit()
     await db.refresh(order)
     
     return order
 
-
-
-async def verify_admin_token(x_admin_token: str = Header(None)):
-    if x_admin_token != ADMIN_API_SECRET:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    return True
-
-
-
-
+async def get_or_create_wishlist(db: AsyncSession, user_id: uuid.UUID):
+    result = await db.execute(select(Wishlist).where(Wishlist.user_id == user_id))
+    wishlist = result.scalar_one_or_none()
+    if not wishlist:
+        wishlist = Wishlist(user_id=user_id)
+        db.add(wishlist)
+        await db.commit()
+        await db.refresh(wishlist)
+    return wishlist
 
 # ============================================================
-# Email Template & Background Sender
+# 3. Newsletter / Subscription Services
 # ============================================================
-def get_welcome_email_html() -> str:
-    """Returns the professional HTML email template."""
-    return """
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FAFAFA; color: #1A1A1A;">
-        <!-- Header -->
-        <div style="padding: 40px 20px; text-align: center; border-bottom: 1px solid #E5E5E5; background-color: #FFFFFF;">
-            <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; margin: 0; color: #1A1A1A; letter-spacing: -0.5px;">
-                Sami's <span style="color: #8C735A; font-style: italic;">Scent</span>
-            </h1>
-        </div>
-        
-        <!-- Body -->
-        <div style="padding: 40px 30px; background-color: #FFFFFF; border: 1px solid #E5E5E5; border-top: none;">
-            <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; margin-top: 0; margin-bottom: 20px; color: #1A1A1A;">Welcome to the Inner Circle.</h2>
-            
-            <p style="font-size: 16px; line-height: 1.6; color: #4A4A5A; margin-bottom: 20px;">
-                Thank you for joining us. At Sami's Scent, we believe fragrance is the most intense form of memory. 
-            </p>
-            <p style="font-size: 16px; line-height: 1.6; color: #4A4A5A; margin-bottom: 20px;">
-                As a subscriber, you will be the first to experience our new fragrance launches, discover the craftsmanship behind our blends, and receive exclusive brand stories.
-            </p>
-            
-            <div style="text-align: center; margin: 35px 0;">
-                <a href="https://samisscent.com/shop" style="background-color: #8C735A; color: #FFFFFF; padding: 14px 32px; text-decoration: none; border-radius: 50px; font-weight: 500; font-size: 14px; letter-spacing: 0.5px; display: inline-block;">
-                    Explore the Collection
-                </a>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="padding: 30px 20px; text-align: center; font-size: 12px; color: #999999; background-color: #FAFAFA;">
-            <p style="margin-bottom: 10px;">&copy; 2026 Sami's Scent. All rights reserved.</p>
-            <p style="margin: 0;">
-                <a href="#" style="color: #8C735A; text-decoration: underline;">Unsubscribe</a> &nbsp;•&nbsp; 
-                <a href="#" style="color: #8C735A; text-decoration: underline;">Privacy Policy</a>
-            </p>
-        </div>
-    </div>
-    """
-
 async def send_welcome_email_async(to_email: str):
-    """Sends the email in a background thread to prevent blocking the API."""
     try:
         resend.api_key = os.getenv("RESEND_API_KEY")
         params = {
             "from": os.getenv("RESEND_FROM_EMAIL", "Sami's Scent <onboarding@resend.dev>"),
             "to": to_email,
             "subject": "Welcome to Sami's Scent",
-            "html": get_welcome_email_html()
+            "html": """
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem; color: #1A1A1A;">
+                <h2 style="font-family: 'Playfair Display', serif; color: #8C735A;">Welcome to Sami's Scent</h2>
+                <p>Thank you for joining our inner circle. You will be the first to know about new fragrance launches and exclusive brand stories.</p>
+                <p>Stay scented, stay elegant.</p>
+            </div>
+            """
         }
-        # Run the synchronous Resend SDK in a background thread
         await asyncio.to_thread(resend.Emails.send, params)
     except Exception as e:
-        print(f"Failed to send welcome email to {to_email}: {e}")
+        print(f"Failed to send welcome email: {e}")
 
-
-# ============================================================
-# Subscription Service
-# ============================================================
 class SubscriptionService:
-    
     @staticmethod
-    async def subscribe(data, db: AsyncSession) -> dict:
-        """Atomic Upsert for newsletter subscription"""
+    async def subscribe(db: AsyncSession, data) -> dict:
         query = text("""
             WITH upserted_user AS (
                 INSERT INTO users (email, full_name)
@@ -319,17 +241,14 @@ class SubscriptionService:
             RETURNING user_id, status
         """)
         
-        # Execute DB transaction
-        await db.execute(query, {"email": data.email, "full_name": "Newsletter Subscriber"})
+        await db.execute(query, {"email": data.email, "full_name": getattr(data, 'full_name', 'Newsletter Subscriber')})
         await db.commit()
         
-        # Trigger email in the background (Fire and forget)
         asyncio.create_task(send_welcome_email_async(data.email))
-        
         return {"status": "success", "message": "Welcome to the inner circle."}
 
     @staticmethod
-    async def get_subscribers(page: int, limit: int, status: str, search: str, db: AsyncSession):
+    async def get_subscribers(db: AsyncSession, page: int, limit: int, status: str, search: str):
         offset = (page - 1) * limit
         
         count_query = text("""
@@ -366,14 +285,3 @@ class SubscriptionService:
                 } for row in rows
             ]
         }
-    
-# Wishlist functions
-async def get_or_create_wishlist(user_id: uuid.UUID,db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Wishlist).where(Wishlist.user_id == user_id))
-    wishlist = result.scalar_one_or_none()
-    if not wishlist:
-        wishlist = Wishlist(user_id=user_id)
-        db.add(wishlist)
-        await db.commit()
-        await db.refresh(wishlist)
-    return wishlist
