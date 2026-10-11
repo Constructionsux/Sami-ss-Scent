@@ -70,18 +70,44 @@ function initSearch() {
     const mobileSearchIcon = document.getElementById('mobileSearchIcon');
     const desktopSearchBtn = document.getElementById('desktopSearchBtn');
     const searchOverlay = document.getElementById('searchOverlay');
+    const closeSearchBtn = document.getElementById('closeSearchBtn');
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
     let searchTimeout;
 
     const openSearch = () => {
-        searchOverlay.classList.add('active');
-        setTimeout(() => searchInput.focus(), 100);
+        if (searchOverlay) {
+            searchOverlay.classList.add('active');
+            setTimeout(() => searchInput && searchInput.focus(), 100);
+        }
     };
 
+    const closeSearch = () => {
+        if (searchOverlay) searchOverlay.classList.remove('active');
+        if (searchInput) searchInput.value = '';
+        if (searchResults) searchResults.innerHTML = '';
+    };
+
+    // Event Listeners for opening/closing
     if (mobileSearchIcon) mobileSearchIcon.addEventListener('click', openSearch);
     if (desktopSearchBtn) desktopSearchBtn.addEventListener('click', openSearch);
+    if (closeSearchBtn) closeSearchBtn.addEventListener('click', closeSearch);
 
+    // Close when clicking outside the popup container
+    if (searchOverlay) {
+        searchOverlay.addEventListener('click', (e) => {
+            if (e.target === searchOverlay) closeSearch();
+        });
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('active')) {
+            closeSearch();
+        }
+    });
+
+    // Search Input Logic
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
@@ -92,12 +118,16 @@ function initSearch() {
                 return;
             }
 
+            // Show a subtle loading state
+            searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">Searching...</p>';
+
             searchTimeout = setTimeout(async () => {
                 try {
+                    // The backend will handle the case-insensitivity and wildcards
                     const products = await apiRequest(`/api/products/?search=${encodeURIComponent(query)}&limit=5`);
                     
                     if (products.length === 0) {
-                        searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted, #999);">No products found</p>';
+                        searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">No products found</p>';
                     } else {
                         searchResults.innerHTML = products.map(p => `
                             <div class="search-result-item" onclick="window.location.href='/product/${p.id}'">
@@ -111,8 +141,9 @@ function initSearch() {
                     }
                 } catch (error) {
                     console.error('Search error:', error);
+                    searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-error);">Error searching products.</p>';
                 }
-            }, 300);
+            }, 300); 
         });
     }
 }
