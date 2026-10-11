@@ -1,18 +1,31 @@
+/* ============================================
+   SAMI'S SCENT - CART MANAGEMENT
+   ============================================ */
+
 class CartManager {
     static async addToCart(productId, quantity = 1) {
         try {
+            // FIX: Payload must exactly match Pydantic CartItemAdd schema
+            const payload = {
+                product_id: productId,
+                quantity: quantity
+            };
+            
             await apiRequest('/api/cart/items', {
                 method: 'POST',
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: quantity
-                })
+                body: JSON.stringify(payload)
             });
             
-            showToast('Added to cart');
+            if (typeof showToast === 'function') {
+                showToast('Added to cart successfully', 'success');
+            }
             this.updateCartCount();
         } catch (error) {
-            showToast(error.message, 'error');
+            if (typeof showToast === 'function') {
+                showToast(error.message || 'Failed to add to cart', 'error');
+            } else {
+                alert('Failed to add to cart: ' + error.message);
+            }
         }
     }
     
@@ -29,11 +42,13 @@ class CartManager {
         try {
             await apiRequest(`/api/cart/items/${itemId}`, {
                 method: 'PATCH',
-                body: JSON.stringify({ quantity })
+                body: JSON.stringify({ quantity: quantity })
             });
             this.updateCartCount();
         } catch (error) {
-            showToast(error.message, 'error');
+            if (typeof showToast === 'function') {
+                showToast(error.message, 'error');
+            }
         }
     }
     
@@ -42,28 +57,34 @@ class CartManager {
             await apiRequest(`/api/cart/items/${itemId}`, {
                 method: 'DELETE'
             });
-            showToast('Item removed');
+            if (typeof showToast === 'function') {
+                showToast('Item removed from cart', 'success');
+            }
             this.updateCartCount();
         } catch (error) {
-            showToast(error.message, 'error');
+            if (typeof showToast === 'function') {
+                showToast(error.message, 'error');
+            }
         }
     }
     
     static async updateCartCount() {
         try {
             const cart = await this.getCart();
-            const count = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-            const badge = document.getElementById('cart-count');
-            if (badge) {
-                badge.textContent = count;
-            }
+            const count = cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+            
+            // Update all cart badges on the page
+            const badges = document.querySelectorAll('#cartCount, #desktopCartCount, #mobileCartCount, #floatingCartCount');
+            badges.forEach(badge => {
+                if (badge) badge.textContent = count;
+            });
         } catch (error) {
             console.error('Failed to update cart count:', error);
         }
     }
 }
 
-// Update cart count on page load
+// Initialize cart count on page load
 document.addEventListener('DOMContentLoaded', () => {
     CartManager.updateCartCount();
 });
