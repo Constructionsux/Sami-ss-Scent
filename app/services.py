@@ -26,6 +26,33 @@ ADMIN_API_SECRET = os.getenv("ADMIN_API_SECRET", "super-secret-admin-key")
 # Use HTTPBearer to correctly read the "Authorization: Bearer <token>" header
 security = HTTPBearer(auto_error=False)
 
+
+async def get_or_create_cart(
+    db: AsyncSession, 
+    user_id: Optional[uuid.UUID] = None, 
+    guest_token: Optional[str] = None
+):
+    if user_id:
+        result = await db.execute(select(Cart).where(Cart.user_id == user_id))
+        cart = result.scalar_one_or_none()
+        if not cart:
+            cart = Cart(user_id=user_id)
+            db.add(cart)
+            await db.commit()
+            await db.refresh(cart)
+    else:
+        if not guest_token:
+            guest_token = str(uuid.uuid4())
+        result = await db.execute(select(Cart).where(Cart.guest_token == guest_token))
+        cart = result.scalar_one_or_none()
+        if not cart:
+            cart = Cart(guest_token=guest_token)
+            db.add(cart)
+            await db.commit()
+            await db.refresh(cart)
+    return cart
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
