@@ -19,6 +19,7 @@ from app.models import (
 )
 from app.schemas import OrderCreate
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
@@ -285,3 +286,50 @@ class SubscriptionService:
                 } for row in rows
             ]
         }
+
+def create_login_token(user_id: str) -> str:
+    """Generates a short-lived (15 min) token specifically for login verification."""
+    SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
+    ALGORITHM = os.getenv("ALGORITHM", "HS256")
+    
+    to_encode = {"sub": user_id, "purpose": "login"}
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+async def send_login_email(email: str, login_token: str):
+    """Sends the passwordless magic link to the user's email."""
+    try:
+        resend.api_key = os.getenv("RESEND_API_KEY")
+        
+        # This URL points back to the login page, which will auto-verify the token
+        # Note: Replace 'sami-scent.onrender.com' with your actual domain if different
+        domain = os.getenv("APP_DOMAIN", "https://sami-scent.onrender.com")
+        callback_url = f"{domain}/login?token={login_token}"
+        
+        params = {
+            "from": os.getenv("RESEND_FROM_EMAIL", "Sami's Scent <onboarding@resend.dev>"),
+            "to": email,
+            "subject": "Your Secure Login Link for Sami's Scent",
+            "html": f"""
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem; color: #1A1A1A; border: 1px solid #e5e5e5; border-radius: 8px;">
+                <h2 style="font-family: 'Playfair Display', serif; color: #8C735A; text-align: center; margin-bottom: 1.5rem;">Sami's Scent</h2>
+                <p style="text-align: center; font-size: 1.1rem; margin-bottom: 1rem;">Hello,</p>
+                <p style="text-align: center; color: #4A4A5A; margin-bottom: 2rem;">You requested a secure, passwordless login link to your Sami's Scent account.</p>
+                
+                <div style="text-align: center; margin: 2.5rem 0;">
+                    <a href="{callback_url}" style="background-color: #8C735A; color: white; padding: 14px 32px; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 1rem; display: inline-block;">
+                        Log In to Sami's Scent
+                    </a>
+                </div>
+                
+                <p style="text-align: center; font-size: 0.85rem; color: #999999; margin-top: 2rem;">
+                    This link will expire in 15 minutes. If you did not request this, please ignore this email.
+                </p>
+            </div>
+            """
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+    except Exception as e:
+        print(f"Failed to send login email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send login email. Please try again.")
