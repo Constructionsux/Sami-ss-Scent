@@ -80,6 +80,6 @@ async def verify_login(data: VerifyTokenRequest, db: AsyncSession = Depends(get_
     except JWTError:
         raise HTTPException(status_code=400, detail="Invalid or expired login link")
 
-@router.get("/me", response_model=UserResponse)
-async def get_me(user: User = Depends(get_current_user)):
-    return user
+# @router.get("/me", response_model=UserResponse)
+# async def get_me(user: User = Depends(get_current_user)):
+#     return user
