@@ -24,13 +24,12 @@ async def get_cart_from_request(
 
 @router.get("/")
 async def get_cart(
-    user: Optional[User] = Depends(get_current_user),
+    user: Optional[User] = Depends(get_current_user), # <-- Must be Optional
     x_guest_token: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
-    cart = await get_cart_from_request(user, x_guest_token, db)
+    cart = await get_or_create_cart(db, user_id=user.id if user else None, guest_token=x_guest_token)
     
-    # Load items with products
     result = await db.execute(
         select(Cart).where(Cart.id == cart.id).options(
             selectinload(Cart.items).selectinload(CartItem.product)
@@ -56,6 +55,7 @@ async def get_cart(
             for item in cart.items
         ]
     }
+
 
 @router.post("/items")
 async def add_item(
