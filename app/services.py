@@ -4,7 +4,7 @@ import asyncio
 import resend
 from datetime import datetime, timedelta
 from typing import Optional
-
+from app.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, text
 from sqlalchemy.orm import selectinload
