@@ -3,251 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop | Sami's Scent</title>
+    <title>Sami's Scent | Luxury Fragrances Nigeria</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/shop.css">
 </head>
 <body>
-    <!-- Marquee -->
-    <div class="marquee-container">
-        <div class="marquee-text">
-            Smell Nice. Feel Confident. • Shop Authentic Fragrances • Delivery Across Nigeria • Find Your Signature Scent • Luxury at Affordable Prices • Make Every Moment Memorable •
+    <!-- Mobile Navigation Top Bar -->
+    <div class="mobile-nav-top">
+        <div class="mobile-nav-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <img src="/static/images/logo.png" alt="Sami's Scent Logo" class="mobile-logo">
         </div>
-    </div>
-    
-    <!-- Navigation -->
-    <nav class="shop-nav">
-        <div class="shop-nav-container">
-            <div class="shop-nav-left">
-                <span class="currency-display">₦ NGN</span>
-                <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-                <div class="shop-nav-links">
-                    <a href="/shop-home">Home</a>
-                    <a href="/shop">Shop</a>
-                    <a href="/wishlist">Wishlist</a>
-                    <a href="/login">Login</a>
-                </div>
-            </div>
-            
-            <a href="/shop-home" class="logo">
-                <span class="logo-text">Sami's <em>Scent</em></span>
+        <div class="mobile-nav-right">
+            <button class="icon-btn-small" id="searchIcon" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="icon-btn-small" id="accountIcon" aria-label="Account">
+                <i class="fas fa-user"></i>
+            </button>
+            <a href="/cart" class="icon-btn-small" aria-label="Cart">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge" id="cartCount">0</span>
             </a>
-            
-            <div class="shop-nav-right">
-                <div class="search-box">
-                    <input type="text" placeholder="Search perfumes...">
-                    <i class="fas fa-search"></i>
-                </div>
-                <button class="icon-btn"><i class="fas fa-user"></i></button>
-                <a href="/cart" class="icon-btn">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-badge" id="cart-count">0</span>
-                </a>
-            </div>
         </div>
-    </nav>
-    
-    <!-- Hero Carousel -->
-    <div class="container">
-        <div class="carousel-container">
-            <div class="carousel-slides" id="carouselSlides">
-                <!-- Loaded dynamically -->
+    </div>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer" id="mobileMenuDrawer">
+        <div class="drawer-header">
+            <span class="logo-text">Sami's <em>Scent</em></span>
+            <button class="close-menu-btn" id="closeMenuBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="drawer-links">
+            <a href="/shop-home">Home</a>
+            <a href="/shop">Shop All</a>
+            <a href="/wishlist">Wishlist</a>
+            <a href="/login">Login / Register</a>
+            <a href="/account">My Account</a>
+            <a href="/orders">My Orders</a>
+        </nav>
+    </div>
+
+    <!-- Search Popup Overlay -->
+    <div class="popup-overlay" id="searchOverlay">
+        <div class="popup-container search-popup">
+            <div class="popup-header">
+                <h3>Search Fragrances</h3>
+                <button class="close-popup-btn" id="closeSearchBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="text" id="searchInput" placeholder="Type to search perfumes, brands..." autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Account Popup Overlay -->
+    <div class="popup-overlay" id="accountOverlay">
+        <div class="popup-container account-popup">
+            <div class="popup-header">
+                <h3>My Account</h3>
+                <button class="close-popup-btn" id="closeAccountBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="accountContent">
+                <!-- Loaded dynamically via JS -->
             </div>
         </div>
     </div>
-    
-    <!-- Categories -->
+
+    <!-- Hero Carousel -->
+    <div class="carousel-container">
+        <div class="carousel-slides" id="carouselSlides">
+            <!-- Loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Brands Vertical Section -->
     <section class="section">
         <div class="container">
-            <h2 class="section-title">Shop by Category</h2>
-            <div class="categories-grid" id="categoriesGrid">
+            <h2 class="section-title">Shop by Brand</h2>
+            <div class="brands-vertical" id="brandsVertical">
                 <!-- Loaded dynamically -->
             </div>
         </div>
     </section>
-    
-    <!-- New Arrivals -->
+
+    <!-- Top Categories Horizontal Scroll -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header-flex">
+                <h2 class="section-title" style="margin: 0;">Top Categories</h2>
+                <a href="/shop" class="show-all-link">Show All <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="horizontal-scroll" id="categoriesScroll">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- New Arrivals Horizontal Scroll -->
     <section class="section">
         <div class="container">
             <h2 class="section-title">New Arrivals</h2>
-            <div class="product-grid" id="newArrivalsGrid">
+            <div class="horizontal-scroll" id="newArrivalsScroll">
                 <!-- Loaded dynamically -->
             </div>
         </div>
     </section>
-    
-    <!-- Bestsellers -->
+
+    <!-- Bestsellers Horizontal Scroll -->
     <section class="section">
         <div class="container">
             <h2 class="section-title">Bestsellers</h2>
-            <div class="product-grid" id="bestsellersGrid">
+            <div class="horizontal-scroll" id="bestsellersScroll">
                 <!-- Loaded dynamically -->
             </div>
         </div>
     </section>
-    
+
+    <!-- Recommended For You Horizontal Scroll -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Recommended For You</h2>
+            <div class="horizontal-scroll" id="recommendedScroll">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Promo Section -->
+    <section class="about-promo">
+        <div class="container">
+            <h1>AFFORDABLE & AUTHENTIC<br>AT YOUR DOORSTEP</h1>
+            <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Discover luxury fragrances that define your presence. We guarantee 100% authentic perfumes delivered safely across Nigeria.
+            </p>
+            <a href="/about" class="btn btn-primary">About Us</a>
+            <img src="/static/images/ceo.jpg" alt="CEO of Sami's Scent" class="ceo-image">
+        </div>
+    </section>
+
+    <!-- Featured Product Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Editor's Pick</h2>
+            <div id="featuredProduct" style="display: flex; justify-content: center;">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="shop-footer">
-        <div class="footer-grid">
-            <div class="footer-section">
-                <span class="logo-text">Sami's <em>Scent</em></span>
-                <p style="margin-top: 1rem; color: var(--color-text-secondary);">
-                    Luxury fragrances crafted for the modern soul.
-                </p>
-                <p style="margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.9rem;">
-                    Lagos, Nigeria<br>
-                    +234 816 287 6620<br>
-                    hello@samisscent.com
-                </p>
+        <div class="container">
+            <div class="footer-logo">
+                <img src="/static/images/logo.png" alt="Sami's Scent Logo">
             </div>
             
-            <div class="footer-section">
-                <h4>Store Links</h4>
-                <a href="/shop-home">Home</a>
-                <a href="/shop">Shop</a>
-                <a href="/login">Login/Register</a>
-                <a href="/wishlist">Wishlist</a>
+            <div class="footer-contact">
+                <p><i class="fas fa-map-marker-alt"></i> Lagos, Nigeria</p>
+                <p><i class="fas fa-phone"></i> +234 816 287 6620</p>
+                <p><i class="fas fa-envelope"></i> hello@samisscent.com</p>
             </div>
-            
-            <div class="footer-section">
-                <h4>Useful Links</h4>
-                <a href="#">About Us</a>
-                <a href="#">FAQs</a>
-                <a href="#">Contact Us</a>
-                <a href="#">Shipping Policy</a>
+
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>Store Links</h4>
+                    <a href="/shop-home">Home</a>
+                    <a href="/shop">Shop</a>
+                    <a href="/login">Login / Register</a>
+                    <a href="/wishlist">Wishlist</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Useful Links</h4>
+                    <a href="/about">About Us</a>
+                    <a href="/faq">FAQs</a>
+                    <a href="/contact">Contact Us</a>
+                    <a href="/shipping">Shipping Policy</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Newsletter</h4>
+                    <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--color-text-secondary);">
+                        Be the first to know about upcoming sales and giveaways.
+                    </p>
+                    <form class="newsletter-form" id="newsletterForm">
+                        <input type="text" name="full_name" placeholder="Your name" required>
+                        <input type="email" name="email" placeholder="Your email here" required>
+                        <button type="submit">Subscribe</button>
+                    </form>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="https://www.instagram.com/sami.scent?stkn=MXcwZTRoNDUyOWM2MQ%3D%3D&utm_source=qr" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@perfvendorinota?_r=1&_t=ZS-9AKIsPYe475" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
             </div>
-            
-            <div class="footer-section">
-                <h4>Follow Us</h4>
-                <a href="https://www.instagram.com/sami.scent?stkn=MXcwZTRoNDUyOWM2MQ%3D%3D&utm_source=qr" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>
-                <a href="https://www.tiktok.com/@perfvendorinota?_r=1&_t=ZS-9AKIsPYe475" target="_blank"><i class="fab fa-tiktok"></i> TikTok</a>
-                <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+
+            <div class="footer-bottom">
+                <p>SAMI'S SCENT &copy; 2026. ALL RIGHTS RESERVED.</p>
             </div>
-        </div>
-        
-        <div class="footer-bottom">
-            <p>&copy; 2026 Sami's Scent. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Floating Action Buttons -->
+    <a href="/cart" class="floating-cart" aria-label="View Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="floatingCartCount">0</span>
+    </a>
     
+    <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank" class="floating-whatsapp" aria-label="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Scripts -->
     <script src="/static/js/api.js"></script>
     <script src="/static/js/cart.js"></script>
-    <script>
-        // Load featured products for carousel
-        async function loadCarousel() {
-            try {
-                const products = await apiRequest('/api/products/featured');
-                const slides = document.getElementById('carouselSlides');
-                
-                slides.innerHTML = products.map(p => `
-                    <div class="carousel-slide">
-                        <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
-                        <div class="carousel-content">
-                            <h2>${p.name}</h2>
-                            <p>${p.description || 'Discover this exquisite fragrance'}</p>
-                            <a href="https://wa.me/2348000000000?text=I'm interested in ${encodeURIComponent(p.name)}" class="whatsapp-btn" target="_blank">
-                                <i class="fab fa-whatsapp"></i> Chat on WhatsApp
-                            </a>
-                        </div>
-                    </div>
-                `).join('');
-                
-                // Auto-slide
-                let currentSlide = 0;
-                setInterval(() => {
-                    currentSlide = (currentSlide + 1) % products.length;
-                    slides.style.transform = `translateX(-${currentSlide * 100}%)`;
-                }, 5000);
-            } catch (error) {
-                console.error('Failed to load carousel:', error);
-            }
-        }
-        
-        // Load categories
-        async function loadCategories() {
-            try {
-                const categories = await apiRequest('/api/products/categories/list');
-                const grid = document.getElementById('categoriesGrid');
-                
-                grid.innerHTML = categories.slice(0, 2).map(c => `
-                    <a href="/shop?category=${c.slug}" class="category-card">
-                        <img src="${c.image_url || '/static/images/category-placeholder.jpg'}" alt="${c.name}">
-                        <div class="category-overlay">
-                            <h3>${c.name}</h3>
-                            <span class="btn btn-primary">Shop Now</span>
-                        </div>
-                    </a>
-                `).join('');
-            } catch (error) {
-                console.error('Failed to load categories:', error);
-            }
-        }
-        
-        // Load new arrivals
-        async function loadNewArrivals() {
-            try {
-                const products = await apiRequest('/api/products/new-arrivals');
-                const grid = document.getElementById('newArrivalsGrid');
-                
-                grid.innerHTML = products.map(p => `
-                    <div class="product-card">
-                        <a href="/product/${p.id}" class="product-image">
-                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
-                        </a>
-                        <div class="product-info">
-                            <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
-                            <h3 class="product-name">${p.name}</h3>
-                            <div class="product-price">
-                                <span class="current-price">₦${parseFloat(p.price).toLocaleString()}</span>
-                            </div>
-                            <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Failed to load new arrivals:', error);
-            }
-        }
-        
-        // Load bestsellers
-        async function loadBestsellers() {
-            try {
-                const products = await apiRequest('/api/products/bestsellers');
-                const grid = document.getElementById('bestsellersGrid');
-                
-                grid.innerHTML = products.map(p => `
-                    <div class="product-card">
-                        <a href="/product/${p.id}" class="product-image">
-                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
-                        </a>
-                        <div class="product-info">
-                            <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
-                            <h3 class="product-name">${p.name}</h3>
-                            <div class="product-price">
-                                <span class="current-price">₦${parseFloat(p.price).toLocaleString()}</span>
-                            </div>
-                            <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Failed to load bestsellers:', error);
-            }
-        }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCarousel();
-            loadCategories();
-            loadNewArrivals();
-            loadBestsellers();
-        });
-    </script>
+    <script src="/static/js/shop.js"></script>
 </body>
 </html>
