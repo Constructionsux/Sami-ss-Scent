@@ -22,13 +22,19 @@ async def get_cart_from_request(
     else:
         raise HTTPException(status_code=400, detail="Authentication required or guest token missing")
 
+
 @router.get("/")
 async def get_cart(
-    user: Optional[User] = Depends(get_current_user), # <-- Must be Optional
+    user: Optional[User] = Depends(get_current_user),
     x_guest_token: Optional[str] = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
-    cart = await get_or_create_cart(db, user_id=user.id if user else None, guest_token=x_guest_token)
+    # FIX: Explicitly use keyword arguments to prevent positional conflicts
+    cart = await get_or_create_cart(
+        db=db, 
+        user_id=user.id if user else None, 
+        guest_token=x_guest_token
+    )
     
     result = await db.execute(
         select(Cart).where(Cart.id == cart.id).options(
@@ -55,7 +61,6 @@ async def get_cart(
             for item in cart.items
         ]
     }
-
 
 @router.post("/items")
 async def add_item(
