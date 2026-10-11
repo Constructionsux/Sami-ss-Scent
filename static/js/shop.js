@@ -286,7 +286,7 @@ async function loadCategoriesHorizontal() {
         
         container.innerHTML = categories.map(c => `
             <div class="category-circle" onclick="window.location.href='/shop?category_slug=${c.slug}'" title="${c.name}">
-                <img src="${c.image_url || '/static/images/category-placeholder.jpg'}" alt="${c.name}">
+                <img src="${c.logo_url || '/static/images/category-placeholder.jpg'}" alt="${c.name}">
                 <div class="category-circle-name">${c.name}</div>
             </div>
         `).join('');
