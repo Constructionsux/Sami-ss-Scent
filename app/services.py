@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import HTTPException, Header, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
+from typing import Optional
 from app.models import (
     User, Product, Cart, CartItem, Wishlist, WishlistItem, 
     Order, OrderItem, DeliveryZone
