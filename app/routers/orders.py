@@ -108,9 +108,13 @@ async def upload_payment_receipt(
 
 @router.get("/")
 async def get_orders(
-    user: User = Depends(get_current_user),
+    user: Optional[User] = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # FIX: Explicitly check if user is authenticated
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated. Please log in.")
+        
     result = await db.execute(
         select(Order).where(Order.user_id == user.id).order_by(Order.created_at.desc()).options(
             selectinload(Order.items)
