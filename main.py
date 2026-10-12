@@ -222,6 +222,9 @@ async def admin_products_page(request: Request):
 async def admin_orders_page(request: Request):
     return templates.TemplateResponse("admin_orders.html", {"request": request})
 
+@app.get("/admin/payments", response_class=HTMLResponse)
+async def admin_payments_page(request: Request):
+    return templates.TemplateResponse("admin_payments.html", {"request": request})
 # ============================================================
 # Startup Event (Single, consolidated)
 # ============================================================
