@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from sqlalchemy.orm import selectinload
 import os, cloudinary, cloudinary.uploader
 from app.database import get_db
-from app.models import User, Order, Product, Brand, Category
+from app.models import User, Order, Product, Brand, Category, OrderItem
 from app.services import get_current_user
+
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -134,3 +135,119 @@ async def send_newsletter(
 ):
     # TODO: Integrate with Resend batch API to send to all newsletter_subscriptions
     return {"message": "Newsletter queued for sending to all subscribers."}
+
+
+
+
+@router.get("/products/stats")
+async def get_product_stats(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    # Total Products
+    total_products = (await db.execute(select(func.count(Product.id)))).scalar() or 0
+    
+    # Most Purchased Product
+    top_product_query = select(Product.name, func.sum(OrderItem.quantity).label('total_qty')) \
+        .join(OrderItem, Product.id == OrderItem.product_id) \
+        .group_by(Product.id, Product.name) \
+        .order_by(desc('total_qty')) \
+        .limit(1)
+    top_product_result = (await db.execute(top_product_query)).first()
+    top_product = top_product_result.name if top_product_result else "N/A"
+    
+    # Most Purchased Brand
+    top_brand_query = select(Brand.name, func.sum(OrderItem.quantity).label('total_qty')) \
+        .join(Product, Brand.id == Product.brand_id) \
+        .join(OrderItem, Product.id == OrderItem.product_id) \
+        .group_by(Brand.id, Brand.name) \
+        .order_by(desc('total_qty')) \
+        .limit(1)
+    top_brand_result = (await db.execute(top_brand_query)).first()
+    top_brand = top_brand_result.name if top_brand_result else "N/A"
+    
+    return {
+        "total_products": total_products,
+        "top_product": top_product,
+        "top_brand": top_brand
+    }
+
+@router.get("/products")
+async def get_admin_products(
+    search: str = Query(""),
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Product).options(selectinload(Product.brand), selectinload(Product.category))
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(
+            (Product.name.ilike(search_term)) | 
+            (Product.brand.has(Brand.name.ilike(search_term)))
+        )
+    
+    query = query.order_by(Product.created_at.desc())
+    result = await db.execute(query)
+    products = result.scalars().all()
+    
+    return [
+        {
+            "id": str(p.id),
+            "name": p.name,
+            "brand": p.brand.name if p.brand else "Unknown",
+            "category": p.category.name if p.category else "Unknown",
+            "price": float(p.price),
+            "stock_quantity": p.stock_quantity,
+            "image_url": p.image_url,
+            "is_active": p.is_active
+        } for p in products
+    ]
+
+@router.patch("/products/{product_id}")
+async def update_product(
+    product_id: str,
+    name: str = Form(None),
+    price: float = Form(None),
+    stock_quantity: int = Form(None),
+    is_active: bool = Form(None),
+    image: UploadFile = File(None),
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Product).where(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    if name is not None: product.name = name
+    if price is not None: product.price = price
+    if stock_quantity is not None: product.stock_quantity = stock_quantity
+    if is_active is not None: product.is_active = is_active
+    
+    if image and image.filename:
+        try:
+            upload_result = await cloudinary.uploader.upload(
+                image.file,
+                folder="samis_scent_products",
+                resource_type="image"
+            )
+            product.image_url = upload_result['secure_url']
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
+            
+    await db.commit()
+    await db.refresh(product)
+    return {"message": "Product updated successfully"}
+
+@router.delete("/products/{product_id}")
+async def delete_product(
+    product_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Product).where(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    await db.delete(product)
+    await db.commit()
+    return {"message": "Product deleted successfully"}
