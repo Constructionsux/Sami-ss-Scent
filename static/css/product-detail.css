@@ -1,0 +1,187 @@
+/* ============================================
+   SAMI'S SCENT - PRODUCT DETAIL PAGE STYLES
+   ============================================ */
+
+.product-detail-main {
+    padding: 2rem 1.5rem 4rem;
+    min-height: 70vh;
+}
+
+.product-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 900px) {
+    .product-detail-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+    }
+}
+
+/* Product Image */
+.product-image-container {
+    background: var(--color-bg, #fafafa);
+    border-radius: var(--radius-md, 8px);
+    overflow: hidden;
+    border: 1px solid var(--color-border, #e5e5e5);
+}
+
+.product-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 1 / 1.2;
+}
+
+/* Product Details */
+.product-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.product-details-container .product-brand {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted, #999);
+}
+
+.product-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--color-text-primary, #1a1a1a);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.product-price-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.product-price-container .current-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-accent, #8c735a);
+}
+
+.product-price-container .old-price {
+    font-size: 1.25rem;
+    color: var(--color-text-muted, #999);
+    text-decoration: line-through;
+}
+
+.product-stock {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-success, #2d6a4f);
+}
+
+.product-stock.out-of-stock {
+    color: var(--color-error, #9b2226);
+}
+
+.product-description {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-text-secondary, #666);
+}
+
+/* Actions */
+.product-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-sm, 4px);
+    overflow: hidden;
+}
+
+.quantity-selector .qty-btn {
+    background: var(--color-surface, #fff);
+    border: none;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--color-text-primary, #1a1a1a);
+    transition: background 0.2s;
+}
+
+.quantity-selector .qty-btn:hover {
+    background: var(--color-bg, #fafafa);
+}
+
+.quantity-selector input {
+    width: 60px;
+    height: 45px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid var(--color-border, #e5e5e5);
+    border-right: 1px solid var(--color-border, #e5e5e5);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary, #1a1a1a);
+    -moz-appearance: textfield;
+}
+
+.quantity-selector input::-webkit-outer-spin-button,
+.quantity-selector input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.add-to-cart-detail-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 0 2rem;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.add-to-cart-detail-btn:disabled {
+    background: var(--color-text-muted, #999);
+    cursor: not-allowed;
+}
+
+/* Recommended Section */
+.recommended-section {
+    margin-top: 4rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--color-border, #e5e5e5);
+}
+
+.recommended-section .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--color-text-primary, #1a1a1a);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-title { font-size: 2rem; }
+    .product-price-container .current-price { font-size: 1.75rem; }
+    .product-actions { flex-direction: column; }
+    .add-to-cart-detail-btn { width: 100%; }
+}
