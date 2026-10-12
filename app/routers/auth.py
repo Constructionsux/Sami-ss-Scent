@@ -4,7 +4,8 @@ from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
 import os
 from jose import jwt, JWTError
-
+from typing import Optional
+from datetime import datetime
 from app.database import get_db
 from app.models import User
 from app.services import create_access_token, create_login_token, send_login_email, get_current_user
@@ -17,16 +18,35 @@ class EmailRequest(BaseModel):
 class VerifyTokenRequest(BaseModel):
     token: str
 
-# --- FIX: Added the missing /me endpoint ---
-@router.get("/me")
-async def get_me(user: User = Depends(get_current_user)):
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+
+@router.patch("/me")
+async def update_me(
+    data: UserUpdate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if data.full_name is not None:
+        user.full_name = data.full_name
+    if data.phone is not None:
+        user.phone = data.phone
+    
+    user.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(user)
+    
     return {
-        "id": str(user.id),
-        "email": user.email,
-        "full_name": user.full_name,
-        "role": user.role
+        "message": "Profile updated successfully",
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "phone": user.phone,
+            "role": user.role
+        }
     }
 
 @router.post("/request-login")
