@@ -192,6 +192,11 @@ async def login_page(request: Request):
 async def wishlist_page(request: Request):
     return templates.TemplateResponse("wishlist.html", {"request": request})
 
+# orders
+@app.get("/orders", response_class=HTMLResponse)
+async def orders_page(request: Request):
+    return templates.TemplateResponse("orders.html", {"request": request})
+
 
 # ============================================================
 # Startup Event (Single, consolidated)
