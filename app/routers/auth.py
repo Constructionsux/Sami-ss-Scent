@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
-import os
-from jose import jwt, JWTError
 from typing import Optional
 from datetime import datetime
+import os
+from jose import jwt, JWTError
+
 from app.database import get_db
 from app.models import User
 from app.services import create_access_token, create_login_token, send_login_email, get_current_user
@@ -18,17 +19,37 @@ class EmailRequest(BaseModel):
 class VerifyTokenRequest(BaseModel):
     token: str
 
-
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     phone: Optional[str] = None
 
+# ============================================================
+# 1. GET /me (Fetch User Profile)
+# ============================================================
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+        "phone": user.phone,
+        "role": user.role
+    }
+
+# ============================================================
+# 2. PATCH /me (Update User Profile)
+# ============================================================
 @router.patch("/me")
 async def update_me(
     data: UserUpdate,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+        
     if data.full_name is not None:
         user.full_name = data.full_name
     if data.phone is not None:
@@ -49,6 +70,9 @@ async def update_me(
         }
     }
 
+# ============================================================
+# 3. POST /request-login (Passwordless Login Request)
+# ============================================================
 @router.post("/request-login")
 async def request_login(data: EmailRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
@@ -69,6 +93,9 @@ async def request_login(data: EmailRequest, db: AsyncSession = Depends(get_db)):
     
     return {"message": "If an account exists with this email, a secure login link has been sent."}
 
+# ============================================================
+# 4. POST /verify-login (Passwordless Login Verification)
+# ============================================================
 @router.post("/verify-login")
 async def verify_login(data: VerifyTokenRequest, db: AsyncSession = Depends(get_db)):
     SECRET_KEY = os.getenv("SECRET_KEY", "your-fallback-secret-key")
