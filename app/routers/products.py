@@ -10,6 +10,7 @@ from app.models import Product, Brand, Category
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
 
+# 1. Base list route
 @router.get("/")
 async def get_products(
     search: Optional[str] = None,
@@ -62,39 +63,7 @@ async def get_products(
         for p in products
     ]
 
-# --- FIX: Properly parse UUID and handle the query ---
-@router.get("/{product_id}")
-async def get_product(product_id: str, db: AsyncSession = Depends(get_db)):
-    try:
-        product_uuid = uuid.UUID(product_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid product ID format")
-        
-    result = await db.execute(
-        select(Product).where(Product.id == product_uuid, Product.is_active == True).options(
-            selectinload(Product.brand),
-            selectinload(Product.categories)
-        )
-    )
-    product = result.scalar_one_or_none()
-    
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    return {
-        "id": str(product.id),
-        "name": product.name,
-        "slug": product.slug,
-        "description": product.description,
-        "price": float(product.price),
-        "compare_at_price": float(product.compare_at_price) if product.compare_at_price else None,
-        "stock_quantity": product.stock_quantity,
-        "image_url": product.image_url,
-        "rating": float(product.rating),
-        "brand": {"name": product.brand.name, "slug": product.brand.slug} if product.brand else None,
-        "categories": [{"name": c.name, "slug": c.slug} for c in product.categories] if product.categories else []
-    }
-
+# 2. SPECIFIC routes MUST come BEFORE the dynamic {product_id} route
 @router.get("/featured")
 async def get_featured_products(db: AsyncSession = Depends(get_db)):
     query = select(Product).where(Product.is_active == True, Product.is_featured == True).options(
@@ -148,3 +117,36 @@ async def get_categories(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Category).where(Category.is_active == True))
     categories = result.scalars().all()
     return [{"name": c.name, "slug": c.slug, "image_url": c.image_url} for c in categories]
+
+# 3. DYNAMIC route MUST be last
+@router.get("/{product_id}")
+async def get_product(product_id: str, db: AsyncSession = Depends(get_db)):
+    try:
+        product_uuid = uuid.UUID(product_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid product ID format")
+        
+    result = await db.execute(
+        select(Product).where(Product.id == product_uuid, Product.is_active == True).options(
+            selectinload(Product.brand),
+            selectinload(Product.categories)
+        )
+    )
+    product = result.scalar_one_or_none()
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    return {
+        "id": str(product.id),
+        "name": product.name,
+        "slug": product.slug,
+        "description": product.description,
+        "price": float(product.price),
+        "compare_at_price": float(product.compare_at_price) if product.compare_at_price else None,
+        "stock_quantity": product.stock_quantity,
+        "image_url": product.image_url,
+        "rating": float(product.rating),
+        "brand": {"name": product.brand.name, "slug": product.brand.slug} if product.brand else None,
+        "categories": [{"name": c.name, "slug": c.slug} for c in product.categories] if product.categories else []
+    }
