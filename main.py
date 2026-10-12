@@ -213,6 +213,10 @@ async def admin_login_page(request: Request):
 async def admin_dashboard_page(request: Request):
     return templates.TemplateResponse("admin_dashboard.html", {"request": request})
 
+@app.get("/admin/products", response_class=HTMLResponse)
+async def admin_products_page(request: Request):
+    return templates.TemplateResponse("admin_products.html", {"request": request})
+
 # ============================================================
 # Startup Event (Single, consolidated)
 # ============================================================
