@@ -174,7 +174,11 @@ async def get_admin_products(
     admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Product).options(selectinload(Product.brand), selectinload(Product.category))
+    # FIX: Changed Product.category to Product.categories
+    query = select(Product).options(
+        selectinload(Product.brand), 
+        selectinload(Product.categories)
+    )
     
     if search:
         search_term = f"%{search}%"
@@ -193,14 +197,17 @@ async def get_admin_products(
             "name": p.name,
             "brand": p.brand.name if p.brand else "Unknown",
             "brand_id": str(p.brand_id) if p.brand_id else "",
-            "category": p.category.name if p.category else "Unknown",
-            "category_id": str(p.category_id) if p.category_id else "",
+            # FIX: Handle categories as a list and grab the first one for display
+            "category": p.categories[0].name if p.categories else "Unknown",
+            "category_id": str(p.categories[0].id) if p.categories else "",
             "price": float(p.price),
             "stock_quantity": p.stock_quantity,
             "image_url": p.image_url,
             "is_active": p.is_active
         } for p in products
     ]
+
+
 @router.patch("/products/{product_id}")
 async def update_product(
     product_id: str,
