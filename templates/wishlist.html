@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist | Sami's Scent</title>
+    <link rel="icon" type="image/png" href="/static/images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/shop.css">
+    <link rel="stylesheet" href="/static/css/wishlist.css">
+</head>
+<body>
+    <!-- Marquee -->
+    <div class="marquee-container">
+        <div class="marquee-text">
+            Smell Nice. Feel Confident. • Shop Authentic Fragrances • Delivery Across Nigeria • Find Your Signature Scent • Luxury at Affordable Prices • Make Every Moment Memorable •
+        </div>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav">
+        <div class="desktop-nav-container">
+            <div class="desktop-nav-left">
+                <a href="/shop-home" class="desktop-logo">
+                    <img src="/static/images/logo.png" alt="Sami's Scent">
+                </a>
+                <div class="desktop-links">
+                    <a href="/shop-home">Home</a>
+                    <a href="/shop">Shop</a>
+                    <a href="/wishlist" class="active">Wishlist</a>
+                    <a href="/login">Login</a>
+                </div>
+            </div>
+            <div class="desktop-nav-right">
+                <div class="currency-container">
+                    <span class="currency-text">🇬 NGN</span>
+                </div>
+                <div class="desktop-search">
+                    <input type="text" id="desktopSearchInput" placeholder="Search perfumes...">
+                    <button id="desktopSearchBtn"><i class="fas fa-search"></i></button>
+                </div>
+                <button class="icon-btn-small" id="desktopAccountIcon" aria-label="Account">
+                    <i class="fas fa-user"></i>
+                </button>
+                <a href="/cart" class="icon-btn-small" aria-label="Cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="desktopCartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Top Bar -->
+    <div class="mobile-nav-top">
+        <div class="mobile-nav-left">
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <img src="/static/images/logo.png" alt="Sami's Scent Logo" class="mobile-logo">
+        </div>
+        <div class="mobile-nav-right">
+            <button class="icon-btn-small" id="mobileSearchIcon" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="icon-btn-small" id="mobileAccountIcon" aria-label="Account">
+                <i class="fas fa-user"></i>
+            </button>
+            <a href="/cart" class="icon-btn-small" aria-label="Cart">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-badge" id="mobileCartCount">0</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer" id="mobileMenuDrawer">
+        <div class="drawer-header">
+            <span class="logo-text">Sami's <em>Scent</em></span>
+            <button class="close-menu-btn" id="closeMenuBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="drawer-links">
+            <a href="/shop-home">Home</a>
+            <a href="/shop">Shop</a>
+            <a href="/wishlist" class="active">Wishlist</a>
+            <a href="/login">Login / Register</a>
+            <a href="/account">My Account</a>
+            <a href="/orders">My Orders</a>
+        </nav>
+    </div>
+
+    <!-- Search Popup Overlay -->
+    <div class="popup-overlay" id="searchOverlay">
+        <div class="popup-container search-popup">
+            <div class="popup-header">
+                <h3>Search Fragrances</h3>
+                <button class="close-popup-btn" id="closeSearchBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="text" id="searchInput" placeholder="Type to search perfumes, brands..." autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Account Popup Overlay -->
+    <div class="popup-overlay" id="accountOverlay">
+        <div class="popup-container account-popup">
+            <div class="popup-header">
+                <h3>My Account</h3>
+                <button class="close-popup-btn" id="closeAccountBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="accountContent"></div>
+        </div>
+    </div>
+
+    <!-- Main Wishlist Content -->
+    <main class="wishlist-main">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="/shop-home">Home</a>
+                <span class="breadcrumb-separator">></span>
+                <span>My Wishlist</span>
+            </nav>
+
+            <h1 class="page-title">My Wishlist</h1>
+
+            <!-- Loading State -->
+            <div id="wishlistLoading" class="loading-state">
+                <i class="fas fa-circle-notch fa-spin"></i>
+                <p>Loading your saved fragrances...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="wishlistEmpty" class="empty-state" style="display: none;">
+                <i class="far fa-heart"></i>
+                <h2>Your wishlist is empty</h2>
+                <p>Save your favorite fragrances here so you can easily find them later.</p>
+                <a href="/shop" class="btn btn-primary">Explore Our Collection</a>
+            </div>
+
+            <!-- Wishlist Grid -->
+            <div class="wishlist-grid" id="wishlistGrid" style="display: none;">
+                <!-- Items injected by JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="shop-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <span class="logo-text">Sami's <em>Scent</em></span>
+                    <p style="margin-top: 1rem; color: var(--color-text-secondary);">Luxury fragrances crafted for the modern soul.</p>
+                    <p style="margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.9rem;">
+                        Lagos, Nigeria<br>
+                        +234 816 287 6620<br>
+                        hello@samisscent.com
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4>Store Links</h4>
+                    <a href="/shop-home">Home</a>
+                    <a href="/shop">Shop</a>
+                    <a href="/login">Login/Register</a>
+                    <a href="/wishlist">Wishlist</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Useful Links</h4>
+                    <a href="#">About Us</a>
+                    <a href="#">FAQs</a>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Shipping Policy</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="https://www.instagram.com/sami.scent?stkn=MXcwZTRoNDUyOWM2MQ%3D%3D&utm_source=qr" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@perfvendorinota?_r=1&_t=ZS-9AKIsPYe475" target="_blank"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Sami's Scent. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Action Buttons -->
+    <a href="/cart" class="floating-cart" aria-label="View Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="floatingCartCount">0</span>
+    </a>
+    <a href="https://api.whatsapp.com/message/ANGMFTZI4R6LH1" target="_blank" class="floating-whatsapp" aria-label="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/cart.js"></script>
+    <script src="/static/js/shop.js"></script> <!-- Reuses shared nav/search/account logic -->
+    <script src="/static/js/wishlist.js"></script>
+</body>
+</html>
