@@ -193,14 +193,15 @@ async def get_admin_products(
             "id": str(p.id),
             "name": p.name,
             "brand": p.brand.name if p.brand else "Unknown",
+            "brand_id": str(p.brand_id) if p.brand_id else "",
             "category": p.category.name if p.category else "Unknown",
+            "category_id": str(p.category_id) if p.category_id else "",
             "price": float(p.price),
             "stock_quantity": p.stock_quantity,
             "image_url": p.image_url,
             "is_active": p.is_active
         } for p in products
     ]
-
 @router.patch("/products/{product_id}")
 async def update_product(
     product_id: str,
