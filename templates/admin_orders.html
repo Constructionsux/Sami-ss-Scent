@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders | Sami's Scent Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Sami's Scent <span>Admin</span></h3>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Products</a>
+            <a href="/admin/orders" class="nav-item active"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="#" class="nav-item"><i class="fas fa-credit-card"></i> Payments</a>
+            <a href="#" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logoutAdmin()" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h2>Order Management</h2>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-shopping-cart"></i></div>
+                <div class="stat-info">
+                    <h4>Total Orders</h4>
+                    <p id="statTotalOrders">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-user-tie"></i></div>
+                <div class="stat-info">
+                    <h4>Top Client</h4>
+                    <p id="statTopClient" style="font-size: 1.1rem;">N/A</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-tags"></i></div>
+                <div class="stat-info">
+                    <h4>Top Brand</h4>
+                    <p id="statTopBrand" style="font-size: 1.1rem;">N/A</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-crown"></i></div>
+                <div class="stat-info">
+                    <h4>Top Product</h4>
+                    <p id="statTopProduct" style="font-size: 1.1rem;">N/A</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Recent Orders</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Payment</th>
+                            <th>Order Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="8" style="text-align:center; padding: 2rem;">Loading orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/admin_orders.js"></script>
+</body>
+</html>
