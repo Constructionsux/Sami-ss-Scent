@@ -87,3 +87,31 @@ body { font-family: 'Inter', sans-serif; background: var(--admin-bg); color: var
 .modal-header h3 { font-size: 1.1rem; }
 .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
 .modal-form { padding: 1.5rem; }
+
+
+/* Add to the bottom of static/css/admin.css */
+
+.stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+
+.status-select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: white;
+    color: var(--admin-text);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.status-select:focus {
+    border-color: var(--admin-primary);
+}
+
+.status-pending { background: #f3f4f6; color: #4b5563; }
+.status-processing { background: #e0e7ff; color: #3730a3; }
+.status-shipped { background: #dbeafe; color: #1e40af; }
+.status-delivered { background: #d1fae5; color: #065f46; }
+.status-completed { background: #059669; color: white; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
