@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products | Sami's Scent Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Sami's Scent <span>Admin</span></h3>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="/admin/products" class="nav-item active"><i class="fas fa-box"></i> Products</a>
+            <a href="#" class="nav-item"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="#" class="nav-item"><i class="fas fa-credit-card"></i> Payments</a>
+            <a href="#" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logoutAdmin()" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h2>Product Management</h2>
+            <button class="btn-primary" onclick="openAddProductModal()"><i class="fas fa-plus"></i> Add New Product</button>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="productStatsGrid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-box-open"></i></div>
+                <div class="stat-info">
+                    <h4>Total Products</h4>
+                    <p id="statTotalProducts">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-crown"></i></div>
+                <div class="stat-info">
+                    <h4>Top Product</h4>
+                    <p id="statTopProduct" style="font-size: 1.1rem;">N/A</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-tags"></i></div>
+                <div class="stat-info">
+                    <h4>Top Brand</h4>
+                    <p id="statTopBrand" style="font-size: 1.1rem;">N/A</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div class="content-card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+            <div style="flex: 1; position: relative;">
+                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                <input type="text" id="productSearch" placeholder="Search by product name or brand..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--admin-border); border-radius: 6px; font-size: 0.9rem;">
+            </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="content-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Product Name</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr><td colspan="7" style="text-align:center; padding: 2rem;">Loading products...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Product</h3>
+                <button class="close-modal" onclick="closeModal('productModal')">&times;</button>
+            </div>
+            <form id="productForm" class="modal-form">
+                <input type="hidden" id="editProductId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="prodName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (₦)</label>
+                        <input type="number" id="prodPrice" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Brand</label>
+                        <select id="prodBrand" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="prodCategory" required></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock Quantity</label>
+                        <input type="number" id="prodStock" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="prodStatus">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Product Image</label>
+                    <input type="file" id="prodImage" accept="image/*">
+                    <small id="currentImageHint" style="color: #6b7280; display: none; margin-top: 0.25rem;"></small>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="prodDesc" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block" id="productSubmitBtn">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/admin_products.js"></script>
+</body>
+</html>
