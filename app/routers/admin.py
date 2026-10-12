@@ -7,7 +7,6 @@ from app.database import get_db
 from app.models import User, Order, Product, Brand, Category, OrderItem
 from app.services import get_current_user
 
-
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 # Dependency to ensure user is admin
@@ -252,3 +251,90 @@ async def delete_product(
     await db.delete(product)
     await db.commit()
     return {"message": "Product deleted successfully"}
+
+@router.get("/orders/stats")
+async def get_order_stats(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    # Total Orders
+    total_orders = (await db.execute(select(func.count(Order.id)))).scalar() or 0
+    
+    # Top Client (by number of orders)
+    top_client_query = select(
+        Order.customer_name, 
+        func.count(Order.id).label('order_count')
+    ).group_by(Order.customer_name).order_by(desc('order_count')).limit(1)
+    top_client_result = (await db.execute(top_client_query)).first()
+    top_client = top_client_result.customer_name if top_client_result else "N/A"
+    
+    # Top Brand (by quantity sold)
+    top_brand_query = select(
+        Brand.name, 
+        func.sum(OrderItem.quantity).label('total_qty')
+    ).join(Product, OrderItem.product_id == Product.id) \
+     .join(Brand, Product.brand_id == Brand.id) \
+     .group_by(Brand.id, Brand.name) \
+     .order_by(desc('total_qty')).limit(1)
+    top_brand_result = (await db.execute(top_brand_query)).first()
+    top_brand = top_brand_result.name if top_brand_result else "N/A"
+    
+    # Top Product (by quantity sold)
+    top_product_query = select(
+        Product.name, 
+        func.sum(OrderItem.quantity).label('total_qty')
+    ).join(OrderItem, Product.id == OrderItem.product_id) \
+     .group_by(Product.id, Product.name) \
+     .order_by(desc('total_qty')).limit(1)
+    top_product_result = (await db.execute(top_product_query)).first()
+    top_product = top_product_result.name if top_product_result else "N/A"
+    
+    return {
+        "total_orders": total_orders,
+        "top_client": top_client,
+        "top_brand": top_brand,
+        "top_product": top_product
+    }
+
+@router.get("/orders")
+async def get_admin_orders(
+    admin: User = Depends(get_admin_user), 
+    db: AsyncSession = Depends(get_db)
+):
+    # Eagerly load items to prevent lazy loading issues
+    query = select(Order).options(selectinload(Order.items)).order_by(Order.created_at.desc()).limit(50)
+    result = await db.execute(query)
+    orders = result.scalars().all()
+    
+    return [
+        {
+            "id": str(o.id),
+            "order_number": o.order_number,
+            "customer_name": o.customer_name,
+            "customer_email": o.customer_email,
+            "total_amount": float(o.total_amount),
+            "payment_status": o.payment_status,
+            "order_status": o.order_status,
+            "created_at": o.created_at.strftime("%Y-%m-%d %H:%M"),
+            "items_count": len(o.items)
+        } for o in orders
+    ]
+
+@router.patch("/orders/{order_id}/status")
+async def update_order_status(
+    order_id: str,
+    status_data: dict, # Expects {"status": "delivered"}
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    new_status = status_data.get("status")
+    valid_statuses = ["pending", "processing", "shipped", "delivered", "completed", "cancelled"]
+    
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid order status")
+        
+    result = await db.execute(select(Order).where(Order.id == order_id))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    order.order_status = new_status
+    await db.commit()
+    return {"message": f"Order status updated to {new_status}"}
