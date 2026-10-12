@@ -114,23 +114,27 @@ async def get_or_create_cart(
     user_id: Optional[uuid.UUID] = None, 
     guest_token: Optional[str] = None
 ):
-    # FIX: Eagerly load items and products to prevent MissingGreenlet async errors
     query = select(Cart).options(
         selectinload(Cart.items).selectinload(CartItem.product)
     )
     
     if user_id:
         query = query.where(Cart.user_id == user_id)
+    elif guest_token:
+        query = query.where(Cart.guest_token == guest_token)
     else:
-        if not guest_token:
-            guest_token = str(uuid.uuid4())
+        guest_token = str(uuid.uuid4())
         query = query.where(Cart.guest_token == guest_token)
         
     result = await db.execute(query)
     cart = result.scalar_one_or_none()
     
     if not cart:
-        cart = Cart(user_id=user_id, guest_token=guest_token)
+        # FIX: Do not assign guest_token to user carts to prevent unique violations
+        cart = Cart(
+            user_id=user_id, 
+            guest_token=guest_token if not user_id else None
+        )
         db.add(cart)
         await db.commit()
         await db.refresh(cart)
