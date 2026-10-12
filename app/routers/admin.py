@@ -345,3 +345,82 @@ async def update_order_status(
     order.order_status = new_status
     await db.commit()
     return {"message": f"Order status updated to {new_status}"}
+
+
+
+@router.get("/payments/stats")
+async def get_payment_stats(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    # Total Verified Revenue
+    revenue_result = await db.execute(
+        select(func.sum(Order.total_amount)).where(Order.payment_status == "verified")
+    )
+    total_revenue = float(revenue_result.scalar() or 0)
+    
+    # Counts
+    pending = (await db.execute(
+        select(func.count(Order.id)).where(Order.payment_status == "submitted")
+    )).scalar() or 0
+    
+    verified = (await db.execute(
+        select(func.count(Order.id)).where(Order.payment_status == "verified")
+    )).scalar() or 0
+    
+    rejected = (await db.execute(
+        select(func.count(Order.id)).where(Order.payment_status == "rejected")
+    )).scalar() or 0
+    
+    return {
+        "total_revenue": total_revenue,
+        "pending": pending,
+        "verified": verified,
+        "rejected": rejected
+    }
+
+@router.get("/payments")
+async def get_admin_payments(
+    admin: User = Depends(get_admin_user), 
+    db: AsyncSession = Depends(get_db)
+):
+    # Fetch orders, focusing on those with payment activity
+    query = select(Order).order_by(Order.created_at.desc()).limit(100)
+    result = await db.execute(query)
+    orders = result.scalars().all()
+    
+    return [
+        {
+            "id": str(o.id),
+            "order_number": o.order_number,
+            "customer_name": o.customer_name,
+            "amount": float(o.total_amount),
+            "payment_status": o.payment_status,
+            "receipt_url": o.payment_receipt_url,
+            "created_at": o.created_at.strftime("%Y-%m-%d %H:%M")
+        } for o in orders
+    ]
+
+@router.patch("/payments/{order_id}/status")
+async def update_payment_status(
+    order_id: str,
+    status_data: dict,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    new_status = status_data.get("status")
+    if new_status not in ["verified", "rejected", "pending"]:
+        raise HTTPException(status_code=400, detail="Invalid payment status")
+        
+    result = await db.execute(select(Order).where(Order.id == order_id))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    order.payment_status = new_status
+    
+    # Automatically update order status based on payment
+    if new_status == "verified":
+        order.order_status = "processing"
+    elif new_status == "rejected":
+        order.order_status = "cancelled"
+        
+    await db.commit()
+    return {"message": f"Payment marked as {new_status}"}
