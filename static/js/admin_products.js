@@ -114,13 +114,12 @@ async function openEditProductModal(productId) {
     document.getElementById('prodPrice').value = product.price;
     document.getElementById('prodStock').value = product.stock_quantity;
     document.getElementById('prodStatus').value = product.is_active.toString();
-    document.getElementById('prodDesc').value = ''; // Description might not be in the list view, leave blank or fetch
     
-    // Find brand and category IDs (simplified for this example, assumes exact name match or you can store IDs in the list)
-    // For robustness, the backend should return brand_id and category_id in the list endpoint. 
-    // Assuming we update backend to return them, or we just let admin re-select.
+    // Pre-select brand and category
+    if (product.brand_id) document.getElementById('prodBrand').value = product.brand_id;
+    if (product.category_id) document.getElementById('prodCategory').value = product.category_id;
     
-    document.getElementById('currentImageHint').textContent = `Current: ${product.image_url ? 'Image set' : 'No image'}`;
+    document.getElementById('currentImageHint').textContent = product.image_url ? 'Current image will be replaced if you upload a new one.' : 'No image currently set.';
     document.getElementById('currentImageHint').style.display = 'block';
     document.getElementById('prodImage').required = false;
 
