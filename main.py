@@ -73,7 +73,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pathlib import Path
 
 from app.database import engine, Base, get_db
-from app.routers import auth, products, cart, wishlist, orders
+from app.routers import auth, products, cart, wishlist, orders,admin_auth, admin
 from app.schemas import SubscribeRequest, PaginatedSubscribers
 from app.services import SubscriptionService, verify_admin_token
 
@@ -101,6 +101,8 @@ app.include_router(products.router)
 app.include_router(cart.router)
 app.include_router(wishlist.router)
 app.include_router(orders.router)
+app.include_router(admin_auth.router) 
+app.include_router(admin.router)
 
 # ============================================================
 # Newsletter / Subscription Routes (from earlier implementation)
