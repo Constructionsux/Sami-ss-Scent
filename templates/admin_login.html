@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Sami's Scent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <h2>Admin Portal</h2>
+            <p>Enter your credentials to access the dashboard</p>
+        </div>
+        <form id="adminLoginForm" class="login-form">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="adminEmail" required placeholder="admin@samisscent.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="adminPassword" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-primary" id="loginBtn">
+                <span class="btn-text">Sign In</span>
+                <span class="btn-loader" hidden><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+            <p id="loginError" class="error-message" style="display: none;"></p>
+        </form>
+    </div>
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            
+            btn.disabled = true;
+            btn.querySelector('.btn-text').hidden = true;
+            btn.querySelector('.btn-loader').hidden = false;
+            errorEl.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('adminEmail').value,
+                        password: document.getElementById('adminPassword').value
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Login failed');
+                }
+
+                const data = await response.json();
+                localStorage.setItem('admin_token', data.access_token);
+                window.location.href = '/admin/dashboard';
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.querySelector('.btn-text').hidden = false;
+                btn.querySelector('.btn-loader').hidden = true;
+            }
+        });
+    </script>
+</body>
+</html>
