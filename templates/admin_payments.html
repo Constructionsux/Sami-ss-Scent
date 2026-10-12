@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments | Sami's Scent Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Sami's Scent <span>Admin</span></h3>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Products</a>
+            <a href="/admin/orders" class="nav-item"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="/admin/payments" class="nav-item active"><i class="fas fa-credit-card"></i> Payments</a>
+            <a href="#" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logoutAdmin()" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h2>Payment Verification</h2>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-naira-sign"></i></div>
+                <div class="stat-info">
+                    <h4>Total Verified Revenue</h4>
+                    <p id="statRevenue">₦0.00</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <h4>Pending Review</h4>
+                    <p id="statPending">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <h4>Verified</h4>
+                    <p id="statVerified">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-info">
+                    <h4>Rejected</h4>
+                    <p id="statRejected">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Recent Payment Submissions</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Receipt</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <tr><td colspan="7" style="text-align:center; padding: 2rem;">Loading payments...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Receipt Preview Modal -->
+    <div class="modal-overlay" id="receiptModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Payment Receipt</h3>
+                <button class="close-modal" onclick="closeModal('receiptModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 2rem;">
+                <img id="receiptImage" src="" alt="Payment Receipt" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--admin-border);">
+                <p id="noReceiptMsg" style="display: none; color: #6b7280; padding: 2rem;">No receipt uploaded for this order.</p>
+            </div>
+            <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid var(--admin-border); display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn-secondary" onclick="closeModal('receiptModal')">Close</button>
+                <button class="btn-primary" id="modalVerifyBtn" style="background: #059669;">Verify Payment</button>
+                <button class="btn-secondary" id="modalRejectBtn" style="color: #dc2626; border-color: #dc2626;">Reject Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/admin_payments.js"></script>
+</body>
+</html>
