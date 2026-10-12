@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Sami's Scent Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Sami's Scent <span>Admin</span></h3>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="#" class="nav-item"><i class="fas fa-box"></i> Products</a>
+            <a href="#" class="nav-item"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="#" class="nav-item"><i class="fas fa-credit-card"></i> Payments</a>
+            <a href="#" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logoutAdmin()" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h2>Dashboard Overview</h2>
+            <div class="top-actions">
+                <button class="btn-secondary" onclick="openModal('newsletterModal')"><i class="fas fa-paper-plane"></i> Send Newsletter</button>
+                <button class="btn-primary" onclick="openModal('productModal')"><i class="fas fa-plus"></i> Add Product</button>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-shopping-cart"></i></div>
+                <div class="stat-info">
+                    <h4>Total Orders</h4>
+                    <p id="statOrders">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-naira-sign"></i></div>
+                <div class="stat-info">
+                    <h4>Total Revenue</h4>
+                    <p id="statRevenue">₦0.00</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <h4>Pending Payments</h4>
+                    <p id="statPending">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Recent Orders & Payments</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Product</h3>
+                <button class="close-modal" onclick="closeModal('productModal')">&times;</button>
+            </div>
+            <form id="addProductForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (₦)</label>
+                        <input type="number" name="price" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Brand</label>
+                        <select name="brand_id" id="brandSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category_id" id="categorySelect" required></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock Quantity</label>
+                        <input type="number" name="stock_quantity" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Image</label>
+                        <input type="file" name="image" id="productImage" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Create Product</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Newsletter Modal -->
+    <div class="modal-overlay" id="newsletterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Send Newsletter</h3>
+                <button class="close-modal" onclick="closeModal('newsletterModal')">&times;</button>
+            </div>
+            <form id="newsletterForm" class="modal-form">
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" name="subject" required placeholder="e.g., New Arrivals & Exclusive Discounts">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea name="message" rows="5" required placeholder="Write your newsletter content here..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Send to All Subscribers</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
