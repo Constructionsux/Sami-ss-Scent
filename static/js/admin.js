@@ -143,6 +143,15 @@ document.getElementById('addProductForm')?.addEventListener('submit', async (e) 
         btn.textContent = originalText;
     }
 });
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    sidebar.classList.toggle('active');
+    if (overlay) {
+        overlay.classList.toggle('active');
+    }
+}
 
 // Newsletter Form
 document.getElementById('newsletterForm')?.addEventListener('submit', async (e) => {
