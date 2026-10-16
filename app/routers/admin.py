@@ -96,7 +96,7 @@ async def create_product(
     image_url = None
     if image and image.filename:
         try:
-            upload_result = await cloudinary.uploader.upload(
+            upload_result = cloudinary.uploader.upload(
                 image.file,
                 folder="samis_scent_products",
                 resource_type="image"
