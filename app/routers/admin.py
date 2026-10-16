@@ -94,9 +94,9 @@ async def create_product(
     db: AsyncSession = Depends(get_db)
 ):
     image_url = None
-    if image:
+    if image and image.filename:
         try:
-            upload_result = cloudinary.uploader.upload(
+            upload_result = await cloudinary.uploader.upload(
                 image.file,
                 folder="samis_scent_products",
                 resource_type="image"
@@ -106,14 +106,33 @@ async def create_product(
             raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
             
     slug = name.lower().replace(" ", "-").replace("'", "")
+    
+    # FIX 1: Create product WITHOUT category_id
     product = Product(
-        name=name, slug=slug, brand_id=brand_id, category_id=category_id,
-        price=price, stock_quantity=stock_quantity, description=description,
-        image_url=image_url, is_active=True
+        name=name, 
+        slug=slug, 
+        brand_id=brand_id,
+        price=price, 
+        stock_quantity=stock_quantity, 
+        description=description,
+        image_url=image_url, 
+        is_active=True
     )
     db.add(product)
+    
+    # FIX 2: Flush to generate the product ID before adding to the relationship
+    await db.flush()
+    
+    # FIX 3: Associate the category via the many-to-many relationship
+    if category_id:
+        category_result = await db.execute(select(Category).where(Category.id == category_id))
+        category = category_result.scalar_one_or_none()
+        if category:
+            product.categories.append(category)
+            
     await db.commit()
     return {"message": "Product created successfully"}
+
 
 @router.get("/brands/list")
 async def get_brands(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
