@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Q
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, text
 from sqlalchemy.orm import selectinload
-import os, uuid, cloudinary, cloudinary.uploader, asyncio, resend
+import os, cloudinary, cloudinary.uploader, resend
 from datetime import datetime
+import uuid
+import asyncio
 
 from app.database import get_db
 from app.models import User, Order, OrderItem, Product, Brand, Category
@@ -170,43 +172,94 @@ async def get_admin_products(search: str = Query(""), admin: User = Depends(get_
         } for p in products
     ]
 
+
 @router.post("/products")
 async def create_product(
-    name: str = Form(...), brand_id: str = Form(...), category_id: str = Form(...),
-    price: float = Form(...), stock_quantity: int = Form(...), description: str = Form(""),
-    image: UploadFile = File(None), admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)
+    name: str = Form(...), 
+    brand_id: str = Form(...), 
+    category_id: str = Form(...),
+    price: float = Form(...), 
+    stock_quantity: int = Form(...), 
+    description: str = Form(""),
+    image: UploadFile = File(None), 
+    admin: User = Depends(get_admin_user), 
+    db: AsyncSession = Depends(get_db)
 ):
     image_url = None
     if image and image.filename:
         try:
-            upload_result =  cloudinary.uploader.upload(image.file, folder="samis_scent_products", resource_type="image")
+            # FIX 1: Cloudinary's SDK is synchronous. We MUST run it in a background thread 
+            # to prevent it from blocking the async event loop and causing greenlet errors.
+            upload_result =  asyncio.to_thread(
+                cloudinary.uploader.upload, 
+                image.file, 
+                folder="samis_scent_products", 
+                resource_type="image"
+            )
             image_url = upload_result['secure_url']
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
             
     slug = name.lower().replace(" ", "-").replace("'", "")
-    product = Product(name=name, slug=slug, brand_id=brand_id, price=price, stock_quantity=stock_quantity, description=description, image_url=image_url, is_active=True)
+    
+    # FIX 2: Explicitly convert strings to UUID objects. This prevents SQLAlchemy from 
+    # attempting any behind-the-scenes type coercion that can trigger lazy loading.
+    try:
+        brand_uuid = uuid.UUID(brand_id)
+        cat_uuid = uuid.UUID(category_id) if category_id else None
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid brand or category ID format")
+
+    # FIX 3: Create the product WITHOUT passing category_id as a keyword argument
+    product = Product(
+        name=name, 
+        slug=slug, 
+        brand_id=brand_uuid, 
+        price=price, 
+        stock_quantity=stock_quantity, 
+        description=description, 
+        image_url=image_url, 
+        is_active=True
+    )
     db.add(product)
     
-    await db.flush() # Generate ID
+    # FIX 4: Flush the session to generate the product's primary key (ID) in the database
+    await db.flush()
     
-    if category_id:
-        cat_result = await db.execute(select(Category).where(Category.id == category_id))
+    # FIX 5: Safely associate the category via the many-to-many relationship list
+    if cat_uuid:
+        cat_result = await db.execute(select(Category).where(Category.id == cat_uuid))
         category = cat_result.scalar_one_or_none()
         if category:
-            product.categories.append(category) # FIX: Append to relationship, don't pass as kwarg
+            product.categories.append(category)
             
     await db.commit()
-    return {"message": "Product created successfully"}
+    
+    # FIX 6: Return a plain dictionary, NOT the SQLAlchemy model, to prevent serialization issues
+    return {"message": "Product created successfully", "product_id": str(product.id)}
+
 
 @router.patch("/products/{product_id}")
 async def update_product(
-    product_id: str, name: str = Form(None), price: float = Form(None), stock_quantity: int = Form(None),
-    is_active: bool = Form(None), image: UploadFile = File(None), admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)
+    product_id: str,
+    name: str = Form(None),
+    price: float = Form(None),
+    stock_quantity: int = Form(None),
+    is_active: bool = Form(None),
+    image: UploadFile = File(None),
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Product).where(Product.id == product_id))
+    # Explicitly convert product_id to UUID for the query
+    try:
+        product_uuid = uuid.UUID(product_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid product ID format")
+
+    result = await db.execute(select(Product).where(Product.id == product_uuid))
     product = result.scalar_one_or_none()
-    if not product: raise HTTPException(status_code=404, detail="Product not found")
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
         
     if name is not None: product.name = name
     if price is not None: product.price = price
@@ -215,7 +268,13 @@ async def update_product(
     
     if image and image.filename:
         try:
-            upload_result = await cloudinary.uploader.upload(image.file, folder="samis_scent_products", resource_type="image")
+            # FIX: Use asyncio.to_thread for synchronous Cloudinary upload
+            upload_result = await asyncio.to_thread(
+                cloudinary.uploader.upload,
+                image.file,
+                folder="samis_scent_products",
+                resource_type="image"
+            )
             product.image_url = upload_result['secure_url']
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
