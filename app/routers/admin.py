@@ -8,7 +8,7 @@ import uuid
 import asyncio
 
 from app.database import get_db
-from app.models import User, Order, OrderItem, Product, Brand, Category
+from app.models import User, Order, OrderItem, Product, Brand, Category, product_categories
 from app.services import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
@@ -188,8 +188,7 @@ async def create_product(
     image_url = None
     if image and image.filename:
         try:
-            # FIX 1: Cloudinary's SDK is synchronous. We MUST run it in a background thread 
-            # to prevent it from blocking the async event loop and causing greenlet errors.
+            # Run synchronous Cloudinary SDK in a background thread
             upload_result = await asyncio.to_thread(
                 cloudinary.uploader.upload, 
                 image.file, 
@@ -202,15 +201,14 @@ async def create_product(
             
     slug = name.lower().replace(" ", "-").replace("'", "")
     
-    # FIX 2: Explicitly convert strings to UUID objects. This prevents SQLAlchemy from 
-    # attempting any behind-the-scenes type coercion that can trigger lazy loading.
+    # Explicitly convert strings to UUID objects
     try:
         brand_uuid = uuid.UUID(brand_id)
         cat_uuid = uuid.UUID(category_id) if category_id else None
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid brand or category ID format")
 
-    # FIX 3: Create the product WITHOUT passing category_id as a keyword argument
+    # Create the product WITHOUT passing category_id
     product = Product(
         name=name, 
         slug=slug, 
@@ -223,19 +221,22 @@ async def create_product(
     )
     db.add(product)
     
-    # FIX 4: Flush the session to generate the product's primary key (ID) in the database
+    # Flush the session to generate the product's primary key (ID) in the database
     await db.flush()
     
-    # FIX 5: Safely associate the category via the many-to-many relationship list
+    # FIX: Directly insert into the association table. 
+    # This completely bypasses SQLAlchemy's lazy-loading mechanism on the uncommitted object.
     if cat_uuid:
-        cat_result = await db.execute(select(Category).where(Category.id == cat_uuid))
-        category = cat_result.scalar_one_or_none()
-        if category:
-            product.categories.append(category)
+        await db.execute(
+            product_categories.insert().values(
+                product_id=product.id,
+                category_id=cat_uuid
+            )
+        )
             
     await db.commit()
     
-    # FIX 6: Return a plain dictionary, NOT the SQLAlchemy model, to prevent serialization issues
+    # Return a plain dictionary to prevent serialization issues
     return {"message": "Product created successfully", "product_id": str(product.id)}
 
 
