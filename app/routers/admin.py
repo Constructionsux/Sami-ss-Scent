@@ -276,3 +276,22 @@ async def send_newsletter(subject: str = Form(...), message: str = Form(...), ad
         return {"message": f"Newsletter sent to {len(subscribers)} subscribers."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send: {str(e)}")
+
+@router.get("/stats")
+async def get_admin_stats(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    total_orders = (await db.execute(select(func.count(Order.id)))).scalar() or 0
+    
+    revenue_result = await db.execute(
+        select(func.sum(Order.total_amount)).where(Order.payment_status == "verified")
+    )
+    total_revenue = float(revenue_result.scalar() or 0)
+    
+    pending_payments = (await db.execute(
+        select(func.count(Order.id)).where(Order.payment_status == "submitted")
+    )).scalar() or 0
+    
+    return {
+        "total_orders": total_orders,
+        "total_revenue": total_revenue,
+        "pending_payments": pending_payments
+    }
