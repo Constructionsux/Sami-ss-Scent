@@ -9,9 +9,12 @@
     <link rel="stylesheet" href="/static/css/admin.css">
 </head>
 <body class="admin-body">
+    
+    <!-- Sidebar Overlay (MUST be outside the sidebar) -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
         <div class="sidebar-header">
             <h3>Sami's Scent <span>Admin</span></h3>
         </div>
@@ -19,8 +22,8 @@
             <a href="/admin/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> Dashboard</a>
             <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Products</a>
             <a href="/admin/orders" class="nav-item"><i class="fas fa-shopping-bag"></i> Orders</a>
-            <a href="#" class="nav-item"><i class="fas fa-credit-card"></i> Payments</a>
-            <a href="#" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
+            <a href="/admin/payments" class="nav-item"><i class="fas fa-credit-card"></i> Payments</a>
+            <a href="/admin/newsletter" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
         </nav>
         <div class="sidebar-footer">
             <button onclick="logoutAdmin()" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -30,9 +33,9 @@
     <!-- Main Content -->
     <main class="main-content">
         <header class="top-bar">
-              <button class="mobile-menu-btn" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
             <h2>Dashboard Overview</h2>
             <div class="top-actions">
                 <button class="btn-secondary" onclick="openModal('newsletterModal')"><i class="fas fa-paper-plane"></i> Send Newsletter</button>
@@ -97,7 +100,7 @@
                 <h3>Add New Product</h3>
                 <button class="close-modal" onclick="closeModal('productModal')">&times;</button>
             </div>
-            <form id="addProductForm" class="modal-form">
+            <form id="addProductForm" class="modal-form" enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Product Name</label>
