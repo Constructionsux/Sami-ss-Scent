@@ -226,22 +226,34 @@ async def create_order(db: AsyncSession, user: Optional[User], request: OrderCre
         order_status="pending",
         items=order_items
     )
+    # db.add(order)
+    
+    # # Clear cart
+    # await db.execute(delete(CartItem).where(CartItem.cart_id == cart.id))
+    # await db.commit()
+    
+    # # --- ADDED: Eagerly load items for the admin email ---
+    # await db.refresh(order)
+    
+    # # Eagerly load items for the email to prevent MissingGreenlet/lazy load errors
+    # result = await db.execute(
+    #     select(Order).where(Order.id == order.id).options(selectinload(Order.items))
+    # )
+    # order = result.scalar_one()
+    
+    # return order
+    
+    # At the very end of create_order in app/services.py:
+
     db.add(order)
     
     # Clear cart
     await db.execute(delete(CartItem).where(CartItem.cart_id == cart.id))
     await db.commit()
     
-    # --- ADDED: Eagerly load items for the admin email ---
-    await db.refresh(order)
-    
-    # Eagerly load items for the email to prevent MissingGreenlet/lazy load errors
-    result = await db.execute(
-        select(Order).where(Order.id == order.id).options(selectinload(Order.items))
-    )
-    order = result.scalar_one()
-    
+    # Just return the order. The router will handle extracting the dict safely.
     return order
+    
 async def get_or_create_wishlist(db: AsyncSession, user_id: uuid.UUID):
     result = await db.execute(select(Wishlist).where(Wishlist.user_id == user_id))
     wishlist = result.scalar_one_or_none()
