@@ -190,7 +190,7 @@ async def create_product(
         try:
             # FIX 1: Cloudinary's SDK is synchronous. We MUST run it in a background thread 
             # to prevent it from blocking the async event loop and causing greenlet errors.
-            upload_result =  asyncio.to_thread(
+            upload_result = await asyncio.to_thread(
                 cloudinary.uploader.upload, 
                 image.file, 
                 folder="samis_scent_products", 
