@@ -145,7 +145,7 @@ body { font-family: 'Inter', sans-serif; background: var(--admin-bg); color: var
 .data-table th, .data-table td { padding: 1rem 1.5rem; text-align: left; border-bottom: 1px solid var(--admin-border); font-size: 0.9rem; white-space: nowrap; }
 .data-table th { background: #f9fafb; font-weight: 600; color: #4b5563; position: sticky; top: 0; }
 
-.status-badge { padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.status-badge { padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; display: inline-block; }
 .status-pending { background: #f3f4f6; color: #4b5563; }
 .status-submitted { background: #fef3c7; color: #92400e; }
 .status-verified { background: #d1fae5; color: #065f46; }
@@ -166,6 +166,7 @@ body { font-family: 'Inter', sans-serif; background: var(--admin-bg); color: var
     cursor: pointer;
     outline: none;
     transition: border-color 0.2s;
+    width: 100%;
 }
 .status-select:focus { border-color: var(--admin-primary); }
 
@@ -258,7 +259,7 @@ body { font-family: 'Inter', sans-serif; background: var(--admin-bg); color: var
 
     .top-actions {
         flex-direction: column;
-        width: auto;
+        width: 100%;
     }
 
     .top-actions button {
@@ -281,17 +282,81 @@ body { font-family: 'Inter', sans-serif; background: var(--admin-bg); color: var
 
     .form-row {
         grid-template-columns: 1fr;
-        gap: 0;
+        gap: 1rem;
     }
 
-    .data-table th, .data-table td {
+    /* ============================================
+       MOBILE TABLE VERTICAL STACK (No Overflow)
+       ============================================ */
+    .table-responsive {
+        overflow-x: visible; /* Remove horizontal scroll completely */
+    }
+
+    .data-table {
+        min-width: 100%; /* Remove fixed min-width */
+    }
+
+    .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr {
+        display: block;
+    }
+
+    /* Hide table headers visually but keep for screen readers */
+    .data-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    /* Turn each row into a card */
+    .data-table tr {
+        border: 1px solid var(--admin-border);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        background: white;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* Stack cells vertically */
+    .data-table td {
+        border: none;
+        border-bottom: 1px solid #f3f4f6;
         padding: 0.75rem 1rem;
-        font-size: 0.85rem;
+        text-align: left;
+        white-space: normal; /* Allow text to wrap */
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
     }
 
+    .data-table td:last-child {
+        border-bottom: 0;
+    }
+
+    /* Make the first column (usually ID/Name) stand out as the card header */
+    .data-table td:first-child {
+        background: #f9fafb;
+        font-weight: 700;
+        color: var(--admin-text);
+        border-bottom: 1px solid var(--admin-border);
+        font-size: 1rem;
+        padding: 1rem;
+    }
+    
+    /* Actions column should stay row-based for buttons */
+    .data-table td:last-child {
+        flex-direction: row;
+        gap: 0.5rem;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        padding-top: 1rem;
+    }
+
+    /* Modal adjustments for mobile */
     .modal-content {
         max-width: 100%;
         max-height: 95vh;
+        margin: 1rem;
     }
     
     .modal-footer {
