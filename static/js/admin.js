@@ -49,7 +49,8 @@ async function loadDashboard() {
         document.getElementById('statRevenue').textContent = '₦' + stats.total_revenue.toLocaleString();
         document.getElementById('statPending').textContent = stats.pending_payments;
 
-        const orders = await adminFetch('/api/admin/recent-orders');
+        // FIXED: Use the correct endpoint that exists in the backend
+        const orders = await adminFetch('/api/admin/orders'); 
         const tbody = document.getElementById('ordersTableBody');
         
         if (orders.length === 0) {
