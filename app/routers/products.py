@@ -168,35 +168,56 @@ router = APIRouter(prefix="/api/products", tags=["Products"])
 
 @router.get("/")
 async def get_products(
-    search: Optional[str] = None, brand_slug: Optional[str] = None, category_slug: Optional[str] = None,
-    sort: str = "newest", page: int = Query(1, ge=1), limit: int = Query(12, ge=1, le=100), db: AsyncSession = Depends(get_db)
+    search: Optional[str] = None,
+    brand_slug: Optional[str] = None,
+    category_slug: Optional[str] = None,
+    sort: str = "newest",
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=1000),  # <-- FIX: Increased max limit to 1000
+    db: AsyncSession = Depends(get_db)
 ):
     query = select(Product).where(Product.is_active == True).options(
-        selectinload(Product.brand), selectinload(Product.categories)
+        selectinload(Product.brand), 
+        selectinload(Product.categories)
     )
     
-    if search: query = query.where(Product.name.ilike(f"%{search}%"))
-    if brand_slug: query = query.where(Product.brand.has(Brand.slug == brand_slug))
-    if category_slug: query = query.where(Product.categories.any(Category.slug == category_slug))
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(Product.name.ilike(search_term))
         
-    if sort == "price_asc": query = query.order_by(Product.price.asc())
-    elif sort == "price_desc": query = query.order_by(Product.price.desc())
-    elif sort == "bestselling": query = query.order_by(Product.sales_count.desc())
-    else: query = query.order_by(Product.created_at.desc())
+    if brand_slug:
+        query = query.where(Product.brand.has(Brand.slug == brand_slug))
         
-    query = query.offset((page - 1) * limit).limit(limit)
+    if category_slug:
+        query = query.where(Product.categories.any(Category.slug == category_slug))
+        
+    if sort == "price_asc":
+        query = query.order_by(Product.price.asc())
+    elif sort == "price_desc":
+        query = query.order_by(Product.price.desc())
+    elif sort == "bestselling":
+        query = query.order_by(Product.sales_count.desc())
+    else:
+        query = query.order_by(Product.created_at.desc())
+        
+    offset = (page - 1) * limit
+    query = query.offset(offset).limit(limit)
+    
     result = await db.execute(query)
     products = result.scalars().all()
     
     return [
         {
-            "id": str(p.id), "name": p.name, "slug": p.slug, "description": p.description, 
-            "price": float(p.price), "compare_at_price": float(p.compare_at_price) if p.compare_at_price else None,
+            "id": str(p.id), "name": p.name, "slug": p.slug, 
+            "description": p.description, "price": float(p.price), 
+            "compare_at_price": float(p.compare_at_price) if p.compare_at_price else None,
             "stock_quantity": p.stock_quantity, "image_url": p.image_url,
             "brand": {"name": p.brand.name, "slug": p.brand.slug} if p.brand else None,
             "categories": [{"name": c.name, "slug": c.slug} for c in p.categories] if p.categories else []
-        } for p in products
+        }
+        for p in products
     ]
+
 
 @router.get("/featured")
 async def get_featured_products(db: AsyncSession = Depends(get_db)):
