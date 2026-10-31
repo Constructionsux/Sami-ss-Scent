@@ -8,7 +8,7 @@ import uuid
 import asyncio
 
 from app.database import get_db
-from app.models import User, Order, OrderItem, Product, Brand, Category, product_categories
+from app.models import User, Order, OrderItem, Product, Brand, Category, product_categories,DeliveryPark
 from app.services import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
@@ -355,3 +355,86 @@ async def get_admin_stats(admin: User = Depends(get_admin_user), db: AsyncSessio
         "total_revenue": total_revenue,
         "pending_payments": pending_payments
     }
+
+
+@router.get("/parks/stats")
+async def get_parks_stats(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    total_parks = (await db.execute(select(func.count(DeliveryPark.id)).where(DeliveryPark.is_active == True))).scalar() or 0
+    total_cities = (await db.execute(select(func.count(func.distinct(DeliveryPark.city))).where(DeliveryPark.is_active == True))).scalar() or 0
+    avg_fee_result = await db.execute(select(func.avg(DeliveryPark.fee)).where(DeliveryPark.is_active == True))
+    avg_fee = float(avg_fee_result.scalar() or 0)
+    
+    return {
+        "total_parks": total_parks,
+        "total_cities": total_cities,
+        "avg_fee": avg_fee
+    }
+
+@router.get("/parks")
+async def get_parks(admin: User = Depends(get_admin_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(DeliveryPark).order_by(DeliveryPark.state, DeliveryPark.city))
+    parks = result.scalars().all()
+    return [
+        {
+            "id": str(p.id),
+            "state": p.state,
+            "city": p.city,
+            "park_name": p.park_name,
+            "fee": float(p.fee),
+            "is_active": p.is_active
+        } for p in parks
+    ]
+
+@router.post("/parks")
+async def create_park(
+    state: str = Form(...),
+    city: str = Form(...),
+    park_name: str = Form(...),
+    fee: float = Form(...),
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    park = DeliveryPark(state=state, city=city, park_name=park_name, fee=fee, is_active=True)
+    db.add(park)
+    await db.commit()
+    return {"message": "Park added successfully"}
+
+@router.patch("/parks/{park_id}")
+async def update_park(
+    park_id: str,
+    state: str = Form(None),
+    city: str = Form(None),
+    park_name: str = Form(None),
+    fee: float = Form(None),
+    is_active: bool = Form(None),
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(DeliveryPark).where(DeliveryPark.id == park_id))
+    park = result.scalar_one_or_none()
+    if not park:
+        raise HTTPException(status_code=404, detail="Park not found")
+        
+    if state is not None: park.state = state
+    if city is not None: park.city = city
+    if park_name is not None: park.park_name = park_name
+    if fee is not None: park.fee = fee
+    if is_active is not None: park.is_active = is_active
+    
+    await db.commit()
+    return {"message": "Park updated successfully"}
+
+@router.delete("/parks/{park_id}")
+async def delete_park(
+    park_id: str,
+    admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(DeliveryPark).where(DeliveryPark.id == park_id))
+    park = result.scalar_one_or_none()
+    if not park:
+        raise HTTPException(status_code=404, detail="Park not found")
+        
+    await db.delete(park)
+    await db.commit()
+    return {"message": "Park deleted successfully"}
