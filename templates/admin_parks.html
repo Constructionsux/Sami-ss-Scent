@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Parks | Sami's Scent Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Sami's Scent <span>Admin</span></h3>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="/admin/products" class="nav-item"><i class="fas fa-box"></i> Products</a>
+            <a href="/admin/orders" class="nav-item"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="/admin/payments" class="nav-item"><i class="fas fa-credit-card"></i> Payments</a>
+            <a href="/admin/parks" class="nav-item active"><i class="fas fa-map-marker-alt"></i> Delivery Parks</a>
+            <a href="/admin/newsletter" class="nav-item"><i class="fas fa-envelope"></i> Newsletter</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logoutAdmin()" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h2>Delivery Parks Management</h2>
+            <div class="top-actions">
+                <button class="btn-primary" onclick="openAddParkModal()"><i class="fas fa-plus"></i> Add New Park</button>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-map-pin"></i></div>
+                <div class="stat-info">
+                    <h4>Total Active Parks</h4>
+                    <p id="statTotalParks">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-city"></i></div>
+                <div class="stat-info">
+                    <h4>Cities Covered</h4>
+                    <p id="statTotalCities">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-naira-sign"></i></div>
+                <div class="stat-info">
+                    <h4>Average Delivery Fee</h4>
+                    <p id="statAvgFee">₦0.00</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parks Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Registered Delivery Parks</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>City</th>
+                            <th>Park Name</th>
+                            <th>Delivery Fee</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parksTableBody">
+                        <tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading parks...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Park Modal -->
+    <div class="modal-overlay" id="parkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Delivery Park</h3>
+                <button class="close-modal" onclick="closeModal('parkModal')">&times;</button>
+            </div>
+            <form id="parkForm" class="modal-form">
+                <input type="hidden" id="editParkId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="parkState" required placeholder="e.g., Lagos">
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="parkCity" required placeholder="e.g., Ikeja">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Park Name / Landmark</label>
+                    <input type="text" id="parkName" required placeholder="e.g., Ikeja City Mall Bus Stop">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Delivery Fee (₦)</label>
+                        <input type="number" id="parkFee" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="parkStatus">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary btn-block" id="parkSubmitBtn">Save Park</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/admin_parks.js"></script>
+</body>
+</html>
