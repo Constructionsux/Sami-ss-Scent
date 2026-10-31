@@ -1,24 +1,25 @@
 /* ============================================
-   SAMI'S SCENT - SHOPPING HOME PAGE LOGIC
+   SAMI'S SCENT - SHARED SHOPPING LOGIC
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Safely run homepage-specific loaders ONLY if the elements exist
+    if (document.getElementById('carouselSlides')) loadCarousel();
+    if (document.getElementById('brandsVertical')) loadBrandsVertical();
+    if (document.getElementById('categoriesScroll')) loadCategoriesHorizontal();
+    if (document.getElementById('newArrivalsScroll')) loadHorizontalProducts('/api/products/new-arrivals', 'newArrivalsScroll');
+    if (document.getElementById('bestsellersScroll')) loadHorizontalProducts('/api/products/bestsellers', 'bestsellersScroll');
+    if (document.getElementById('recommendedScroll')) loadHorizontalProducts('/api/products/?limit=8', 'recommendedScroll');
+    if (document.getElementById('featuredProduct')) loadFeaturedProduct();
+    
+    // 2. Initialize shared UI components (safe to run on all pages)
     initMobileMenu();
     initPopups();
     initSearch();
     initAccount();
     initNewsletter();
     
-    // Load dynamic content
-    loadCarousel();
-    loadBrandsVertical();
-    loadCategoriesHorizontal();
-    loadHorizontalProducts('/api/products/new-arrivals', 'newArrivalsScroll');
-    loadHorizontalProducts('/api/products/bestsellers', 'bestsellersScroll');
-    loadHorizontalProducts('/api/products/?limit=8', 'recommendedScroll');
-    loadFeaturedProduct();
-    
-    // Update cart counts
+    // 3. Update cart count
     if (typeof CartManager !== 'undefined') {
         CartManager.updateCartCount();
     }
@@ -32,7 +33,7 @@ function initMobileMenu() {
 
     if (menuBtn && drawer) {
         menuBtn.addEventListener('click', () => drawer.classList.add('active'));
-        closeBtn.addEventListener('click', () => drawer.classList.remove('active'));
+        if (closeBtn) closeBtn.addEventListener('click', () => drawer.classList.remove('active'));
         
         document.addEventListener('click', (e) => {
             if (!drawer.contains(e.target) && !menuBtn.contains(e.target)) {
@@ -50,8 +51,8 @@ function initPopups() {
     const closeSearch = document.getElementById('closeSearchBtn');
     const closeAccount = document.getElementById('closeAccountBtn');
 
-    if (closeSearch) closeSearch.addEventListener('click', () => searchOverlay.classList.remove('active'));
-    if (closeAccount) closeAccount.addEventListener('click', () => accountOverlay.classList.remove('active'));
+    if (closeSearch && searchOverlay) closeSearch.addEventListener('click', () => searchOverlay.classList.remove('active'));
+    if (closeAccount && accountOverlay) closeAccount.addEventListener('click', () => accountOverlay.classList.remove('active'));
 
     if (searchOverlay) {
         searchOverlay.addEventListener('click', (e) => {
@@ -70,82 +71,59 @@ function initSearch() {
     const mobileSearchIcon = document.getElementById('mobileSearchIcon');
     const desktopSearchBtn = document.getElementById('desktopSearchBtn');
     const searchOverlay = document.getElementById('searchOverlay');
-    const closeSearchBtn = document.getElementById('closeSearchBtn');
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
     let searchTimeout;
 
+    if (!searchOverlay || !searchInput) return; // Exit if not on a page with search
+
     const openSearch = () => {
-        if (searchOverlay) {
-            searchOverlay.classList.add('active');
-            setTimeout(() => searchInput && searchInput.focus(), 100);
-        }
+        searchOverlay.classList.add('active');
+        setTimeout(() => searchInput.focus(), 100);
     };
 
-    const closeSearch = () => {
-        if (searchOverlay) searchOverlay.classList.remove('active');
-        if (searchInput) searchInput.value = '';
-        if (searchResults) searchResults.innerHTML = '';
-    };
-
-    // Event Listeners for opening/closing
     if (mobileSearchIcon) mobileSearchIcon.addEventListener('click', openSearch);
     if (desktopSearchBtn) desktopSearchBtn.addEventListener('click', openSearch);
-    if (closeSearchBtn) closeSearchBtn.addEventListener('click', closeSearch);
 
-    // Close when clicking outside the popup container
-    if (searchOverlay) {
-        searchOverlay.addEventListener('click', (e) => {
-            if (e.target === searchOverlay) closeSearch();
-        });
-    }
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('active')) {
-            closeSearch();
+    searchOverlay.addEventListener('click', (e) => {
+        if (e.target === searchOverlay) {
+            searchOverlay.classList.remove('active');
+            searchInput.value = '';
+            if (searchResults) searchResults.innerHTML = '';
         }
     });
 
-    // Search Input Logic
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            const query = e.target.value.trim();
-            
-            if (query.length < 2) {
-                searchResults.innerHTML = '';
-                return;
-            }
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+        
+        if (query.length < 2) {
+            if (searchResults) searchResults.innerHTML = '';
+            return;
+        }
 
-            // Show a subtle loading state
-            searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">Searching...</p>';
-
-            searchTimeout = setTimeout(async () => {
-                try {
-                    // The backend will handle the case-insensitivity and wildcards
-                    const products = await apiRequest(`/api/products/?search=${encodeURIComponent(query)}&limit=5`);
-                    
-                    if (products.length === 0) {
-                        searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">No products found</p>';
-                    } else {
-                        searchResults.innerHTML = products.map(p => `
-                            <div class="search-result-item" onclick="window.location.href='/product/${p.id}'">
-                                <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
-                                <div>
-                                    <div style="font-weight: 600; color: var(--color-text-primary);">${p.name}</div>
-                                    <div style="color: var(--color-accent, #8c735a); font-size: 0.9rem;">₦${parseFloat(p.price).toLocaleString()}</div>
-                                </div>
+        searchTimeout = setTimeout(async () => {
+            try {
+                const products = await apiRequest(`/api/products/?search=${encodeURIComponent(query)}&limit=5`);
+                
+                if (products.length === 0) {
+                    searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">No products found</p>';
+                } else {
+                    searchResults.innerHTML = products.map(p => `
+                        <div class="search-result-item" onclick="window.location.href='/product/${p.id}'">
+                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
+                            <div>
+                                <div style="font-weight: 600; color: var(--color-text-primary);">${p.name}</div>
+                                <div style="color: var(--color-accent); font-size: 0.9rem;">₦${parseFloat(p.price).toLocaleString()}</div>
                             </div>
-                        `).join('');
-                    }
-                } catch (error) {
-                    console.error('Search error:', error);
-                    searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-error);">Error searching products.</p>';
+                        </div>
+                    `).join('');
                 }
-            }, 300); 
-        });
-    }
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    });
 }
 
 /* --- Account Popup Logic --- */
@@ -155,6 +133,8 @@ function initAccount() {
     const accountOverlay = document.getElementById('accountOverlay');
     const accountContent = document.getElementById('accountContent');
 
+    if (!accountOverlay || !accountContent) return; // Exit if not on a page with account popup
+
     const openAccount = async () => {
         const token = localStorage.getItem('access_token');
         
@@ -162,14 +142,14 @@ function initAccount() {
             try {
                 const user = await apiRequest('/api/auth/me');
                 accountContent.innerHTML = `
-                    <div style="padding: 1rem; border-bottom: 1px solid var(--color-border, #e5e5e5); margin-bottom: 0.5rem;">
+                    <div style="padding: 1rem; border-bottom: 1px solid var(--color-border); margin-bottom: 0.5rem;">
                         <div style="font-weight: 600; font-size: 1.1rem;">${user.full_name}</div>
-                        <div style="color: var(--color-text-muted, #999); font-size: 0.9rem;">${user.email}</div>
+                        <div style="color: var(--color-text-muted); font-size: 0.9rem;">${user.email}</div>
                     </div>
                     <a href="/account" class="account-option">My Account</a>
                     <a href="/orders" class="account-option">My Orders</a>
                     <a href="/wishlist" class="account-option">My Wishlist</a>
-                    <a href="#" class="account-option" style="color: var(--color-error, #9b2226);" onclick="logout(); return false;">Logout</a>
+                    <a href="#" class="account-option" style="color: var(--color-error);" onclick="logoutAccount(); return false;">Logout</a>
                 `;
             } catch (error) {
                 showLoginOptions(accountContent);
@@ -177,7 +157,6 @@ function initAccount() {
         } else {
             showLoginOptions(accountContent);
         }
-        
         accountOverlay.classList.add('active');
     };
 
@@ -188,12 +167,12 @@ function initAccount() {
 function showLoginOptions(container) {
     container.innerHTML = `
         <p style="padding: 0 1rem 1rem; color: var(--color-text-secondary);">Please log in to access your account details.</p>
-        <a href="/login" class="account-option" style="text-align: center; background: var(--color-accent, #8c735a); color: white; border-radius: 4px; margin: 0 1rem 0.5rem;">Login</a>
+        <a href="/login" class="account-option" style="text-align: center; background: var(--color-accent); color: white; border-radius: 4px; margin: 0 1rem 0.5rem;">Login</a>
         <a href="/login?tab=register" class="account-option" style="text-align: center; border: 1px solid var(--color-border); margin: 0 1rem;">Create Account</a>
     `;
 }
 
-function logout() {
+function logoutAccount() {
     localStorage.removeItem('access_token');
     document.getElementById('accountOverlay').classList.remove('active');
     window.location.reload();
@@ -202,65 +181,51 @@ function logout() {
 /* --- Newsletter Logic --- */
 function initNewsletter() {
     const form = document.getElementById('newsletterForm');
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const email = formData.get('email');
-            const fullName = formData.get('full_name');
-            
-            const btn = form.querySelector('button');
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Subscribing...';
+    if (!form) return; // Exit if not on a page with newsletter form
 
-            try {
-                await apiRequest('/api/subscribe', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: email, full_name: fullName })
-                });
-                
-                if (typeof showToast === 'function') {
-                    showToast('Thank you for subscribing!', 'success');
-                } else {
-                    alert('Thank you for subscribing!');
-                }
-                form.reset();
-            } catch (error) {
-                if (typeof showToast === 'function') {
-                    showToast(error.message || 'Failed to subscribe', 'error');
-                } else {
-                    alert('Failed to subscribe.');
-                }
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const email = formData.get('email');
+        const fullName = formData.get('full_name');
+        
+        const btn = form.querySelector('button');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Subscribing...';
+
+        try {
+            await apiRequest('/api/subscribe', {
+                method: 'POST',
+                body: JSON.stringify({ email: email, full_name: fullName })
+            });
+            
+            if (typeof showToast === 'function') {
+                showToast('Thank you for subscribing!', 'success');
+            } else {
+                alert('Thank you for subscribing!');
             }
-        });
-    }
+            form.reset();
+        } catch (error) {
+            if (typeof showToast === 'function') {
+                showToast(error.message || 'Failed to subscribe', 'error');
+            } else {
+                alert('Failed to subscribe.');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    });
 }
 
-/* --- Dynamic Content Loaders --- */
+/* --- Dynamic Content Loaders (Homepage Only) --- */
 async function loadCarousel() {
+    const slides = document.getElementById('carouselSlides');
+    if (!slides) return;
     try {
         const products = await apiRequest('/api/products/featured');
-        const slides = document.getElementById('carouselSlides');
-        
-        if (!products || products.length === 0) {
-            slides.innerHTML = `
-                <div class="carousel-slide">
-                    <img src="/static/images/placeholder-carousel.jpg" alt="Sami's Scent">
-                    <div class="carousel-content">
-                        <h2>Discover Your Signature Scent</h2>
-                        <p>Luxury fragrances crafted for the modern soul.</p>
-                        <a href="/shop" class="whatsapp-btn" style="background: var(--color-accent, #8c735a);">
-                            Shop Now <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
-            return;
-        }
+        if (!products || products.length === 0) return;
         
         slides.innerHTML = products.map(p => `
             <div class="carousel-slide">
@@ -286,10 +251,10 @@ async function loadCarousel() {
 }
 
 async function loadBrandsVertical() {
+    const container = document.getElementById('brandsVertical');
+    if (!container) return;
     try {
         const brands = await apiRequest('/api/products/brands/list');
-        const container = document.getElementById('brandsVertical');
-        
         if (!brands || brands.length === 0) return;
         
         container.innerHTML = brands.slice(0, 3).map(b => `
@@ -297,9 +262,7 @@ async function loadBrandsVertical() {
                 <img src="${b.logo_url || '/static/images/brand-placeholder.jpg'}" alt="${b.name}">
                 <div class="brand-overlay">
                     <h3>${b.name}</h3>
-                    <span class="shop-now-btn">
-                        Shop Now <i class="fas fa-arrow-right"></i>
-                    </span>
+                    <span class="shop-now-btn">Shop Now <i class="fas fa-arrow-right"></i></span>
                 </div>
             </div>
         `).join('');
@@ -309,15 +272,15 @@ async function loadBrandsVertical() {
 }
 
 async function loadCategoriesHorizontal() {
+    const container = document.getElementById('categoriesScroll');
+    if (!container) return;
     try {
-        const categories = await apiRequest('/api/products/brands/list');
-        const container = document.getElementById('categoriesScroll');
-        
+        const categories = await apiRequest('/api/products/categories/list');
         if (!categories || categories.length === 0) return;
         
         container.innerHTML = categories.map(c => `
             <div class="category-circle" onclick="window.location.href='/shop?category_slug=${c.slug}'" title="${c.name}">
-                <img src="${c.logo_url || '/static/images/category-placeholder.jpg'}" alt="${c.name}">
+                <img src="${c.image_url || '/static/images/category-placeholder.jpg'}" alt="${c.name}">
                 <div class="category-circle-name">${c.name}</div>
             </div>
         `).join('');
@@ -327,14 +290,11 @@ async function loadCategoriesHorizontal() {
 }
 
 async function loadHorizontalProducts(endpoint, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     try {
         const products = await apiRequest(endpoint);
-        const container = document.getElementById(containerId);
-        
-        if (!products || products.length === 0) {
-            container.innerHTML = '<p style="padding: 1rem; color: var(--color-text-muted);">No products available.</p>';
-            return;
-        }
+        if (!products || products.length === 0) return;
         
         container.innerHTML = products.map(p => `
             <div class="product-card-horizontal">
@@ -357,13 +317,15 @@ async function loadHorizontalProducts(endpoint, containerId) {
 }
 
 async function loadFeaturedProduct() {
+    const container = document.getElementById('featuredProduct');
+    if (!container) return;
     try {
         const products = await apiRequest('/api/products/?limit=1'); 
         if (products && products.length > 0) {
             const p = products[0];
-            document.getElementById('featuredProduct').innerHTML = `
+            container.innerHTML = `
                 <div style="width: 100%; max-width: 280px;">
-                    <div class="product-card" style="border: 1px solid var(--color-border, #e5e5e5); border-radius: 8px; overflow: hidden;">
+                    <div class="product-card" style="border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
                         <a href="/product/${p.id}" class="product-image" style="aspect-ratio: 3/4;">
                             <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}" style="width:100%; height:100%; object-fit:cover;">
                         </a>
