@@ -20,8 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadShopData() {
     try {
-        // Load all products
-        const response = await apiRequest('/api/products/?limit=100');
+        // FIX: Request up to 1000 products to ensure the entire catalog is loaded for filtering
+        const response = await apiRequest('/api/products/?limit=1000');
+        
+        console.log(`Successfully loaded ${response.length} products.`); // Debugging line
+        
         allProducts = response;
         filteredProducts = [...allProducts];
         
@@ -36,10 +39,45 @@ async function loadShopData() {
         console.error('Failed to load shop data:', error);
         document.getElementById('productGrid').innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
-                <p style="color: var(--color-error);">Failed to load products. Please refresh.</p>
+                <p style="color: var(--color-error, #9b2226);">Failed to load products. Please refresh the page.</p>
             </div>
         `;
     }
+}
+
+// Also ensure the render function safely handles missing brands
+function renderProducts() {
+    const grid = document.getElementById('productGrid');
+    
+    if (filteredProducts.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                <i class="fas fa-search" style="font-size: 3rem; color: var(--color-border, #e5e5e5); margin-bottom: 1rem;"></i>
+                <p>No products found matching your criteria.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Calculate pagination
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageProducts = filteredProducts.slice(start, end);
+    
+    grid.innerHTML = pageProducts.map(p => `
+        <div class="product-card">
+            <a href="/product/${p.id}" class="product-image">
+                <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}" loading="lazy">
+            </a>
+            <div class="product-info">
+                <!-- FIX: Safely fallback to 'Sami's Scent' if brand is missing -->
+                <div class="product-brand">${p.brand ? p.brand.name : 'Sami\'s Scent'}</div>
+                <h3 class="product-name">${p.name}</h3>
+                <div class="product-price">₦${parseFloat(p.price).toLocaleString()}</div>
+                <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">Add to Cart</button>
+            </div>
+        </div>
+    `).join('');
 }
 
 async function loadFilterOptions() {
