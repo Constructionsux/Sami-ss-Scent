@@ -20,16 +20,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadShopData() {
     try {
-        // FIX: Request up to 1000 products to ensure the entire catalog is loaded for filtering
+        // Load all products (limit increased to ensure we get everything for client-side filtering)
         const response = await apiRequest('/api/products/?limit=1000');
-        
-        console.log(`Successfully loaded ${response.length} products.`); // Debugging line
-        
         allProducts = response;
         filteredProducts = [...allProducts];
         
         // Load brands and categories for filters
         await loadFilterOptions();
+        
+        // FIX: Check URL for brand_slug, category_slug, or search and apply filters automatically
+        applyUrlFilters();
         
         // Render products
         renderProducts();
@@ -39,45 +39,10 @@ async function loadShopData() {
         console.error('Failed to load shop data:', error);
         document.getElementById('productGrid').innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
-                <p style="color: var(--color-error, #9b2226);">Failed to load products. Please refresh the page.</p>
+                <p style="color: var(--color-error, #9b2226);">Failed to load products. Please refresh.</p>
             </div>
         `;
     }
-}
-
-// Also ensure the render function safely handles missing brands
-function renderProducts() {
-    const grid = document.getElementById('productGrid');
-    
-    if (filteredProducts.length === 0) {
-        grid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
-                <i class="fas fa-search" style="font-size: 3rem; color: var(--color-border, #e5e5e5); margin-bottom: 1rem;"></i>
-                <p>No products found matching your criteria.</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Calculate pagination
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const pageProducts = filteredProducts.slice(start, end);
-    
-    grid.innerHTML = pageProducts.map(p => `
-        <div class="product-card">
-            <a href="/product/${p.id}" class="product-image">
-                <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}" loading="lazy">
-            </a>
-            <div class="product-info">
-                <!-- FIX: Safely fallback to 'Sami's Scent' if brand is missing -->
-                <div class="product-brand">${p.brand ? p.brand.name : 'Sami\'s Scent'}</div>
-                <h3 class="product-name">${p.name}</h3>
-                <div class="product-price">₦${parseFloat(p.price).toLocaleString()}</div>
-                <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">Add to Cart</button>
-            </div>
-        </div>
-    `).join('');
 }
 
 async function loadFilterOptions() {
@@ -105,13 +70,38 @@ async function loadFilterOptions() {
     }
 }
 
+// NEW: Automatically apply filters based on URL parameters
+function applyUrlFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const brandSlug = urlParams.get('brand_slug');
+    const categorySlug = urlParams.get('category_slug');
+    const searchQuery = urlParams.get('search');
+
+    // Set dropdown/input values if they exist in the URL
+    if (brandSlug) {
+        document.getElementById('filterBrand').value = brandSlug;
+    }
+    if (categorySlug) {
+        document.getElementById('filterCategory').value = categorySlug;
+        document.getElementById('categoryDropdown').value = categorySlug;
+    }
+    if (searchQuery) {
+        document.getElementById('productSearch').value = searchQuery;
+    }
+
+    // If any filter parameter is present, trigger the filter logic
+    if (brandSlug || categorySlug || searchQuery) {
+        applyFilters();
+    }
+}
+
 function renderProducts() {
     const grid = document.getElementById('productGrid');
     
     if (filteredProducts.length === 0) {
         grid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
-                <i class="fas fa-search" style="font-size: 3rem; color: var(--color-border); margin-bottom: 1rem;"></i>
+                <i class="fas fa-search" style="font-size: 3rem; color: var(--color-border, #e5e5e5); margin-bottom: 1rem;"></i>
                 <p>No products found matching your criteria.</p>
             </div>
         `;
@@ -129,7 +119,7 @@ function renderProducts() {
                 <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}" loading="lazy">
             </a>
             <div class="product-info">
-                <div class="product-brand">${p.brand?.name || 'Sami\'s Scent'}</div>
+                <div class="product-brand">${p.brand ? p.brand.name : 'Sami\'s Scent'}</div>
                 <h3 class="product-name">${p.name}</h3>
                 <div class="product-price">₦${parseFloat(p.price).toLocaleString()}</div>
                 <button class="add-to-cart-btn" onclick="CartManager.addToCart('${p.id}')">Add to Cart</button>
@@ -207,6 +197,7 @@ function handleSortChange(e) {
 
 function handleCategoryChange(e) {
     const categorySlug = e.target.value;
+    document.getElementById('filterCategory').value = categorySlug;
     applyFilters();
 }
 
@@ -215,6 +206,8 @@ function initFilterSidebar() {
     const showBtn = document.getElementById('showFiltersBtn');
     const closeBtn = document.getElementById('closeFilterBtn');
     
+    if (!overlay || !showBtn) return;
+
     showBtn.addEventListener('click', () => {
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -225,7 +218,7 @@ function initFilterSidebar() {
         document.body.style.overflow = '';
     };
     
-    closeBtn.addEventListener('click', closeFilter);
+    if (closeBtn) closeBtn.addEventListener('click', closeFilter);
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeFilter();
     });
@@ -254,9 +247,12 @@ function applyFilters() {
     renderProducts();
     renderPagination();
     
-    // Close filter sidebar
-    document.getElementById('filterOverlay').classList.remove('active');
-    document.body.style.overflow = '';
+    // Close filter sidebar if it's open
+    const overlay = document.getElementById('filterOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 }
 
 function resetFilters() {
@@ -266,6 +262,11 @@ function resetFilters() {
     document.getElementById('onSale').checked = false;
     document.getElementById('filterBrand').value = '';
     document.getElementById('filterCategory').value = '';
+    document.getElementById('categoryDropdown').value = '';
+    document.getElementById('productSearch').value = '';
+    
+    // Clear URL params visually
+    window.history.replaceState({}, document.title, window.location.pathname);
     
     filteredProducts = [...allProducts];
     currentPage = 1;
@@ -279,63 +280,60 @@ function initSearch() {
     const searchOverlay = document.getElementById('searchOverlay');
     const searchInput = document.getElementById('searchInput');
     const searchResults = document.getElementById('searchResults');
+    
+    if (!searchOverlay || !searchInput) return;
+
     let searchTimeout;
 
     const openSearch = () => {
-        if (searchOverlay) {
-            searchOverlay.classList.add('active');
-            setTimeout(() => searchInput && searchInput.focus(), 100);
-        }
+        searchOverlay.classList.add('active');
+        setTimeout(() => searchInput.focus(), 100);
     };
 
     const closeSearch = () => {
-        if (searchOverlay) searchOverlay.classList.remove('active');
-        if (searchInput) searchInput.value = '';
-        if (searchResults) searchResults.innerHTML = '';
+        searchOverlay.classList.remove('active');
+        searchInput.value = '';
+        searchResults.innerHTML = '';
     };
 
     if (mobileSearchIcon) mobileSearchIcon.addEventListener('click', openSearch);
     if (desktopSearchBtn) desktopSearchBtn.addEventListener('click', openSearch);
 
-    if (searchOverlay) {
-        searchOverlay.addEventListener('click', (e) => {
-            if (e.target === searchOverlay) closeSearch();
-        });
-    }
+    searchOverlay.addEventListener('click', (e) => {
+        if (e.target === searchOverlay) closeSearch();
+    });
 
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            const query = e.target.value.trim();
-            
-            if (query.length < 2) {
-                searchResults.innerHTML = '';
-                return;
-            }
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.innerHTML = '';
+            return;
+        }
 
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const products = await apiRequest(`/api/products/?search=${encodeURIComponent(query)}&limit=5`);
-                    
-                    if (products.length === 0) {
-                        searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">No products found</p>';
-                    } else {
-                        searchResults.innerHTML = products.map(p => `
-                            <div class="search-result-item" onclick="window.location.href='/product/${p.id}'">
-                                <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
-                                <div>
-                                    <div style="font-weight: 600; color: var(--color-text-primary);">${p.name}</div>
-                                    <div style="color: var(--color-accent); font-size: 0.9rem;">₦${parseFloat(p.price).toLocaleString()}</div>
-                                </div>
+        searchTimeout = setTimeout(async () => {
+            try {
+                const products = await apiRequest(`/api/products/?search=${encodeURIComponent(query)}&limit=5`);
+                
+                if (products.length === 0) {
+                    searchResults.innerHTML = '<p style="padding: 1rem; text-align: center; color: var(--color-text-muted);">No products found</p>';
+                } else {
+                    searchResults.innerHTML = products.map(p => `
+                        <div class="search-result-item" onclick="window.location.href='/product/${p.id}'">
+                            <img src="${p.image_url || '/static/images/placeholder.jpg'}" alt="${p.name}">
+                            <div>
+                                <div style="font-weight: 600; color: var(--color-text-primary);">${p.name}</div>
+                                <div style="color: var(--color-accent); font-size: 0.9rem;">₦${parseFloat(p.price).toLocaleString()}</div>
                             </div>
-                        `).join('');
-                    }
-                } catch (error) {
-                    console.error('Search error:', error);
+                        </div>
+                    `).join('');
                 }
-            }, 300);
-        });
-    }
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    });
 }
 
 function initAccount() {
@@ -343,6 +341,8 @@ function initAccount() {
     const desktopAccountIcon = document.getElementById('desktopAccountIcon');
     const accountOverlay = document.getElementById('accountOverlay');
     const accountContent = document.getElementById('accountContent');
+
+    if (!accountOverlay || !accountContent) return;
 
     const openAccount = async () => {
         const token = localStorage.getItem('access_token');
@@ -358,7 +358,7 @@ function initAccount() {
                     <a href="/account" class="account-option">My Account</a>
                     <a href="/orders" class="account-option">My Orders</a>
                     <a href="/wishlist" class="account-option">My Wishlist</a>
-                    <a href="#" class="account-option" style="color: var(--color-error);" onclick="logout(); return false;">Logout</a>
+                    <a href="#" class="account-option" style="color: var(--color-error);" onclick="logoutAccount(); return false;">Logout</a>
                 `;
             } catch (error) {
                 showLoginOptions(accountContent);
@@ -366,7 +366,6 @@ function initAccount() {
         } else {
             showLoginOptions(accountContent);
         }
-        
         accountOverlay.classList.add('active');
     };
 
@@ -382,7 +381,7 @@ function showLoginOptions(container) {
     `;
 }
 
-function logout() {
+function logoutAccount() {
     localStorage.removeItem('access_token');
     document.getElementById('accountOverlay').classList.remove('active');
     window.location.reload();
